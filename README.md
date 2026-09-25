@@ -47,7 +47,11 @@ rewrite) is a model call.
 
 - **Tinybird (Rawtree)**: the append-only event log behind the page's history line and the audit trail.
 - **Nimble**: live web data. Reads the event page, each lead's company careers page, and their public work.
-- **AWS (Bedrock)**: filters the research, writes, turns fixes into rules and rewrites.
+- **Black Forest Labs (FLUX 1.1 [pro])**: the faces of the made-up people in the sample room (`faces.py`). The names are
+  invented, so no real person's photo can stand in; each face is generated once from the made-up name and role and
+  saved in `faces/`, and the page says they are AI-generated.
+- **AWS (Bedrock)**: filters the research, writes, turns fixes into rules and rewrites (infrastructure, not a
+  hackathon sponsor).
 
 ### Tested today and left out: Liquid AI
 
@@ -65,6 +69,11 @@ It called jobs.apple.com "not Apple" and metacareers.com "not Meta". Asking for 
 and its reasons contradicted its answers. Fast and schema-perfect, but not fit for "whose page is this". The code path
 stays (`liquid.py`, set `LIQUID_URL`) so the test can be rerun on a larger model.
 
+A second test (`claim_check_test.py`) asked it a simpler question on ten draft openings: does this message claim the
+recipient gave a talk? As asked, it said yes to all ten (5/10). With two worked examples and yes/no answers it caught
+all five invented claims but raised two false alarms (8/10); Bedrock got 10/10. The larger LFM2.5-8B-A1B is a
+reasoning model and was not tested in time.
+
 ## Run it
 
 ```
@@ -80,7 +89,8 @@ Open http://localhost:8765, press **Show me**, then swipe with the arrow keys or
 - `agent.py`: plan, research, draft, swipe, fix; the state cards and the exact checks
 - `llm.py`: one structured call to Bedrock
 - `liquid.py`: one structured call to a local Liquid model (off unless `LIQUID_URL` is set)
-- `judge_compare.py`: the Liquid vs Bedrock test above
+- `judge_compare.py`, `claim_check_test.py`: the Liquid vs Bedrock tests above
+- `faces.py`: generates the sample room's faces with Black Forest Labs FLUX
 - `sponsors.py`: Rawtree log and Nimble search/extract clients
 - `server.py`: the API the page polls
 - `index.html`: the page (product on the left, what the agent is doing on the right)

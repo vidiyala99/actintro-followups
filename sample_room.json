@@ -15,7 +15,8 @@
       "company": "GEICO",
       "why": "Leads an AI product engineering team that hires engineers.",
       "score": 95,
-      "website": "geico.com"
+      "website": "geico.com",
+      "photo": "faces/l1.jpg"
     },
     {
       "id": "l2",
@@ -24,7 +25,8 @@
       "company": "Google Cloud",
       "why": "Runs technical infrastructure operations and hires for it.",
       "score": 78,
-      "website": "cloud.google.com"
+      "website": "cloud.google.com",
+      "photo": "faces/l2.jpg"
     },
     {
       "id": "l3",
@@ -33,7 +35,8 @@
       "company": "Nebius",
       "why": "Developer advocate at an AI cloud that hires engineers.",
       "score": 67,
-      "website": "nebius.com"
+      "website": "nebius.com",
+      "photo": "faces/l3.jpg"
     },
     {
       "id": "l4",
@@ -42,7 +45,8 @@
       "company": "Plum AI",
       "why": "Runs a small AI company and decides who it hires.",
       "score": 66,
-      "website": "plumlending.com"
+      "website": "plumlending.com",
+      "photo": "faces/l4.jpg"
     },
     {
       "id": "l5",
@@ -51,7 +55,8 @@
       "company": "Carmel Labs",
       "why": "Founder of an early company.",
       "score": 68,
-      "website": ""
+      "website": "",
+      "photo": "faces/l5.jpg"
     },
     {
       "id": "l6",
@@ -60,7 +65,8 @@
       "company": "HP IQ",
       "why": "Recruits engineers.",
       "score": 65,
-      "website": "hp.com"
+      "website": "hp.com",
+      "photo": "faces/l6.jpg"
     },
     {
       "id": "l7",
@@ -69,7 +75,8 @@
       "company": "Apple",
       "why": "Manages an ML team.",
       "score": 55,
-      "website": "apple.com"
+      "website": "apple.com",
+      "photo": "faces/l7.jpg"
     },
     {
       "id": "l8",
@@ -78,7 +85,8 @@
       "company": "Augment Code",
       "why": "Engineer who can refer you inside.",
       "score": 54,
-      "website": "augmentcode.com"
+      "website": "augmentcode.com",
+      "photo": "faces/l8.jpg"
     },
     {
       "id": "l9",
@@ -87,9 +95,11 @@
       "company": "Oracle",
       "why": "Engineer who can refer you inside.",
       "score": 50,
-      "website": "oracle.com"
+      "website": "oracle.com",
+      "photo": "faces/l9.jpg"
     }
   ],
   "names_invented": true,
-  "target_roles": "software engineer backend platform"
+  "target_roles": "software engineer backend platform",
+  "faces_note": "Faces are AI-generated with Black Forest Labs flux-pro-1.1; the people do not exist."
 }

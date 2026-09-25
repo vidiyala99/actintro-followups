@@ -17,7 +17,8 @@
 body { background: var(--ground); color: var(--ink); font-family: Carlito, system-ui, sans-serif; font-size: 16px; }
 button { font: inherit; background: none; border: 0; color: inherit; cursor: pointer; }
 .top { flex: none; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; max-width: 80rem; margin: 0 auto; padding: 1rem 2rem; border-bottom: 1px solid var(--rule); }
-.brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 1.1rem; }
+.brand { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 1.1rem; }
+.brand:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 0.3rem; }
 .brand svg { width: 1.6rem; height: 1.6rem; }
 .built { font-size: 0.85rem; color: var(--muted); }
 .intro { max-width: 46rem; margin: 14vh auto 0; padding: 0 2rem; }
@@ -150,7 +151,7 @@ button.mini:hover { border-color: var(--muted); }
 </head>
 <body>
 <header class="top">
-  <span class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="4" width="52" height="56" rx="9" fill="#f2efeb" stroke="#0b0b0c" stroke-width="4.5"/><rect x="24" y="11" width="16" height="4" rx="2" fill="#0b0b0c"/><path d="M24 50 32 24l8 26M27 42h10" fill="none" stroke="#0b0b0c" stroke-width="5" stroke-linejoin="round"/></svg>Actintro</span>
+  <a class="brand" href="https://actintro.com" target="_blank" rel="noreferrer" title="Open Actintro in a new tab"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="4" width="52" height="56" rx="9" fill="#f2efeb" stroke="#0b0b0c" stroke-width="4.5"/><rect x="24" y="11" width="16" height="4" rx="2" fill="#0b0b0c"/><path d="M24 50 32 24l8 26M27 42h10" fill="none" stroke="#0b0b0c" stroke-width="5" stroke-linejoin="round"/></svg>Actintro</a>
   <span class="built">Built today: the follow-up agent, its memory and this view. Existing: Actintro's event research and ranking.</span>
 </header>
 <div id="app"></div>
