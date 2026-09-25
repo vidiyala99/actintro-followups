@@ -354,7 +354,8 @@ async function sendFix(text, cards) {
 function wire(el, c) {
   document.querySelectorAll("[data-act]").forEach((b) => (b.onclick = () => decide(c, b.dataset.act === "keep")));
   let x0 = null;
-  el.onpointerdown = (e) => { x0 = e.clientX; el.classList.add("dragging"); el.setPointerCapture(e.pointerId); };
+  el.onpointerdown = (e) => { if (e.target.closest("a, button")) return; x0 = e.clientX;  // links stay clickable
+    el.classList.add("dragging"); el.setPointerCapture(e.pointerId); };
   el.onpointermove = (e) => { if (x0 === null) return; const dx = e.clientX - x0; el.style.transform = `translateX(${dx}px) rotate(${dx / 40}deg)`; };
   el.onpointerup = (e) => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; el.classList.remove("dragging");
     if (Math.abs(dx) > 120) decide(c, dx > 0); else el.style.transform = ""; };
