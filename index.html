@@ -16,7 +16,7 @@
 * { box-sizing: border-box; margin: 0; }
 body { background: var(--ground); color: var(--ink); font-family: Carlito, system-ui, sans-serif; font-size: 16px; }
 button { font: inherit; background: none; border: 0; color: inherit; cursor: pointer; }
-.top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; max-width: 80rem; margin: 0 auto; padding: 1rem 2rem; border-bottom: 1px solid var(--rule); }
+.top { flex: none; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; max-width: 80rem; margin: 0 auto; padding: 1rem 2rem; border-bottom: 1px solid var(--rule); }
 .brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 1.1rem; }
 .brand svg { width: 1.6rem; height: 1.6rem; }
 .built { font-size: 0.85rem; color: var(--muted); }
@@ -27,10 +27,21 @@ button { font: inherit; background: none; border: 0; color: inherit; cursor: poi
 .primary { margin-top: 2rem; min-height: 3rem; padding: 0 1.8rem; border-radius: 0.5rem; background: var(--ink); color: var(--ground); font-weight: 700; font-size: 1.1rem; transition: transform 140ms var(--ease); }
 .primary:active, .dock button:active, .quick button:active { transform: scale(0.97); }
 .intro small { display: block; margin-top: 3rem; color: var(--muted); }
-.split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 2rem; max-width: 80rem; margin: 0 auto; padding: 1.5rem 2rem 3rem; }
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; overflow: hidden; }
+#app { flex: 1; min-height: 0; }
+.split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 2rem; max-width: 80rem; height: 100%; margin: 0 auto; padding: 1.25rem 2rem 1.25rem; }
+.split > main { display: flex; flex-direction: column; min-height: 0; }
+.split > main > .scrollmain { flex: 1; min-height: 0; overflow-y: auto; }
+::selection { background: var(--keep); color: var(--keep-ink); }
+* { scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
+.card * { scrollbar-color: var(--card-rule) transparent; }
 .head h1 { font-size: 1.6rem; letter-spacing: -0.01em; }
 .head p { margin-top: 0.25rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.card { margin-top: 1.1rem; border-radius: 0.85rem; background: var(--card); color: var(--card-ink); overflow: hidden; touch-action: pan-y; transition: transform 220ms var(--ease), opacity 220ms ease; }
+.card { flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: 0.9rem; border-radius: 0.85rem; background: var(--card); color: var(--card-ink); overflow: hidden; touch-action: pan-y; transition: transform 220ms var(--ease), opacity 220ms ease; }
+.card .scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: 0.4rem;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 2.2rem), transparent); }
+.card .scroll:focus-visible { outline: 2px solid var(--card-ink); outline-offset: -2px; }
 .card.dragging { transition: none; }
 .id { display: grid; grid-template-columns: 4.5rem 1fr auto; gap: 1rem; align-items: center; padding: 1.1rem 1.3rem; border-bottom: 1px solid var(--card-rule); }
 .photo { width: 4.5rem; height: 4.5rem; border-radius: 0.45rem; display: grid; place-items: center; font-weight: 700; font-size: 1.2rem; background: linear-gradient(160deg, #cfc9c3, #a9a39d); }
@@ -47,7 +58,8 @@ button { font: inherit; background: none; border: 0; color: inherit; cursor: poi
 .src { padding: 0.5rem 1.3rem 1rem; font-size: 0.85rem; color: var(--card-muted); }
 .src a { color: inherit; }
 .band { display: flex; justify-content: space-between; padding: 0.7rem 1.3rem; background: var(--tier); color: var(--tier-ink); font-weight: 700; }
-.dock { display: grid; grid-template-columns: 1fr 1.6fr; gap: 0.6rem; margin-top: 0.9rem; }
+.dock { flex: none; display: grid; grid-template-columns: 1fr 1.6fr; gap: 0.6rem; margin-top: 0.8rem; }
+.dock button:focus-visible, .send-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .dock button { min-height: 3rem; border-radius: 0.5rem; font-weight: 700; font-size: 1.1rem; transition: transform 140ms var(--ease); }
 .fixbtn { border: 1px solid var(--ink) !important; }
 .keep { background: var(--keep) !important; color: var(--keep-ink); }
@@ -64,7 +76,7 @@ kbd { margin-left: 0.5rem; padding: 0 0.35rem; border: 1px solid currentColor; b
 .field input { flex: 1; min-height: 2.5rem; border: 0; background: transparent; color: var(--ink); font: inherit; outline: none; }
 .send { width: 2.5rem; height: 2.5rem; border-radius: 9999px; display: grid; place-items: center; background: var(--ink); color: var(--ground); }
 .busy { margin-top: 1rem; padding: 0.8rem 1rem; border: 1px solid var(--rule); border-radius: 0.7rem; color: var(--muted); }
-.panel { position: sticky; top: 1rem; align-self: start; display: grid; gap: 1.1rem; padding: 1.2rem 1.25rem; border: 1px solid var(--rule); border-radius: 0.85rem; background: var(--raised); }
+.panel { align-self: stretch; min-height: 0; overflow-y: auto; display: grid; gap: 1.1rem; padding: 1.2rem 1.25rem; border: 1px solid var(--rule); border-radius: 0.85rem; background: var(--raised); }
 .panel h2 { font-size: 1.06rem; }
 .loop { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.3rem; margin-top: 0.6rem; }
 .loop span { display: grid; place-items: center; min-height: 2.3rem; border-radius: 0.4rem; border: 1px solid var(--rule); font-size: 0.82rem; font-weight: 700; color: var(--muted); }
@@ -80,7 +92,13 @@ kbd { margin-left: 0.5rem; padding: 0 0.35rem; border: 1px solid currentColor; b
 .style small { display: block; margin-top: 0.45rem; font-size: 0.8rem; color: var(--card-muted); }
 .legend { display: flex; gap: 1rem; margin-top: 0.4rem; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .legend i { display: inline-block; width: 0.8rem; height: 0.2rem; margin-right: 0.35rem; vertical-align: 0.2em; }
-.nav { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.1rem; }
+.nav { flex: none; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+.head { flex: none; }
+.send-btn { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.25rem; padding: 0 0.9rem; border-radius: 0.45rem; border: 1px solid var(--ink); font-weight: 700; font-size: 0.92rem; transition: transform 140ms var(--ease), background-color 160ms ease, color 160ms ease; }
+.send-btn:hover { background: var(--ink); color: var(--ground); }
+.send-btn:active { transform: scale(0.97); }
+.send-btn:disabled { border-color: var(--rule); color: var(--muted); opacity: 0.6; cursor: default; background: none; }
+.send-btn svg { width: 0.95rem; height: 0.95rem; }
 .tabs { display: flex; gap: 0.25rem; padding: 0.25rem; border: 1px solid var(--rule); border-radius: 0.6rem; background: var(--raised); }
 .tabs button { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.25rem; padding: 0 0.8rem; border-radius: 0.4rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); transition: background-color 160ms ease, color 160ms ease; }
 .tabs button:hover { color: var(--ink); }
@@ -111,7 +129,7 @@ button.mini:hover { border-color: var(--muted); }
 const $ = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const initials = (n) => (n || "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-let S = null, fixing = false, view = "auto", openId = null;
+let S = null, fixing = false, view = "auto", openId = null, sendTarget = null;
 
 async function api(path, body) {
   const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
@@ -155,14 +173,16 @@ function cardHtml(c) {
       <div><p class="first">${esc(first)}</p><p class="last">${esc(rest.join(" "))}</p>
         <p class="role">${esc(c.lead.title)}</p><span class="chip">${esc(c.lead.company)}</span></div>
       <span class="channel">${esc(c.channel)}</span></div>
+    <div class="scroll" tabindex="0" aria-label="Draft">
     <div class="draft">${c.subject ? `<p class="subject">${esc(c.subject)}</p>` : ""}
       <p class="body">${esc(c.body)}${c.rule_applied ? `<span class="tag">${esc(c.rule_applied)}</span>` : ""}</p></div>
     <p class="why"><b>Why them:</b> ${esc(c.why)}</p>
     ${c.sources.length ? `<p class="src">From: ${c.sources.map((x) => `<a href="${esc(x.url)}" target="_blank" rel="noreferrer">${esc(x.title)}</a>`).join(" · ")}</p>` : ""}
+    </div>
     <div class="band"><span>Top match</span><small>${esc(c.lead.why || "")}</small></div>
   </article>
   <div class="dock"><button class="fixbtn" data-act="fix">Fix<kbd>&larr;</kbd></button><button class="keep" data-act="keep">Keep<kbd>&rarr;</kbd></button></div>
-  <p class="hint">Swipe or use the arrow keys. Kept drafts go to your Inbox, ready to send.</p>`;
+`;
 }
 
 function render() {
@@ -180,11 +200,15 @@ function render() {
   const keptCards = s.cards.filter((c) => c.status === "kept"), kept = keptCards.length;
   // "auto" follows the flow (review, then fix, then kept); a tab pins a pile until the reader picks another.
   const v = view !== "auto" ? view : pending.length ? "review" : fix.length ? "fix" : "kept";
+  // Send acts on the one draft on screen: an opened card, else the top of the review deck.
+  const current = (openId && s.cards.find((c) => c.id === openId)) || (v === "review" ? pending[0] : null);
+  sendTarget = current || null;
   const tab = (k, label, n) => `<button role="tab" aria-selected="${v === k}" data-view="${k}">${label}<span class="n">${n}</span></button>`;
   const nav = `<nav class="nav" aria-label="Your follow-ups">
       <div class="tabs" role="tablist">${tab("review", "To review", pending.length)}${tab("fix", "To fix", fix.length)}${tab("kept", "Kept", kept)}</div>
       <span class="grow"></span>
       <button class="navlink" data-nav="undo" title="Put the last card back">Undo<kbd>Backspace</kbd></button>
+      <button class="send-btn" data-nav="send" ${current ? "" : "disabled"} title="${current ? `Open the draft to ${esc(current.lead.name)} in Gmail` : "Open a draft to send it"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>Send</button>
       <button class="navlink" data-nav="reset" title="Back to the first drafts, style card cleared">Start over</button></nav>`;
   const row = (c, st) => `<button class="mini${st ? " has-st" : ""}" data-open="${c.id}"><span class="av">${esc(initials(c.lead.name))}</span><p><b>${esc(c.lead.name)}</b><small>${esc(c.lead.title)}, ${esc(c.lead.company)} · ${esc(c.channel)}</small></p>${st ? `<span class="st">${esc(st)}</span>` : ""}</button>`;
   let main;
@@ -210,7 +234,8 @@ function render() {
                    fix: "Everything you sent back has been rewritten.", kept: "Swipe right on a draft to keep it." }[v];
     main = `<div class="head"><h1>${s.busy.on ? "Writing follow-ups" : empty}</h1>${s.busy.on ? "" : `<p>${esc(hint)}</p>`}</div>`;
   }
-  main = (s.cards.length ? nav : "") + main;
+  const fits = open || (v === "review" && pending.length);  // a card view fits the screen; lists scroll
+  main = (s.cards.length ? nav : "") + (fits ? main : `<div class="scrollmain">${main}</div>`);
   if (s.busy.on) main += `<p class="busy">${esc(s.busy.what)}… ${s.cards.length} of ${s.leads_total || "?"} written</p>`;
   app.innerHTML = `<div class="split"><main>${main}</main>${panel(s)}</div>`;
   const card = document.getElementById("card");
@@ -230,6 +255,13 @@ async function decide(c, keep) {
   setTimeout(poll, 180);
 }
 async function nav_(what) {
+  if (what === "send") {
+    const c = sendTarget; if (!c) return;
+    // Mockup: a real Gmail compose tab with the draft filled in. Nothing is sent from here.
+    const url = "https://mail.google.com/mail/?view=cm&fs=1&su=" + encodeURIComponent(c.subject || "") + "&body=" + encodeURIComponent(c.body || "");
+    window.open(url, "_blank", "noopener");
+    return;
+  }
   // Set the view first: a reply that lands after the reader clicked a tab must not move them.
   if (what === "undo") { view = "review"; openId = null; render(); await api("/api/undo", {}); }
   if (what === "reset") { view = "auto"; openId = null; await api("/api/reset?to=drafts", {}); }
