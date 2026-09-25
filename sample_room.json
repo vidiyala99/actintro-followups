@@ -1,0 +1,18 @@
+{
+  "event": {
+    "title": "Agents & APIs SF Developer Meetup",
+    "url": "https://luma.com/",
+    "description": "Postman's developer meetup in San Francisco: live demos and talks on building agents on top of APIs."
+  },
+  "reader": "Aakash Vidiyala: software engineer, 3 years of data platform work (Snowflake migration, same-day ETL on 5M+ row tables), built agent evals (TrueBind) and is building actintro.com. Looking for full-stack, backend, platform or forward-deployed engineering roles in SF.",
+  "top": 6,
+  "leads": [
+    {"id": "l1", "name": "Maya Okafor", "title": "Staff Engineer, API Platform", "company": "Postman", "why": "Works on the API platform that hosted the event; Postman hires platform engineers.", "score": 92},
+    {"id": "l2", "name": "Daniel Kwon", "title": "Engineering Manager", "company": "Supabase", "why": "Manages a backend team at a company that hires remote backend engineers.", "score": 88},
+    {"id": "l3", "name": "Rhea Sharma", "title": "Developer Relations", "company": "Firebase", "why": "Firebase presented agent skills at the event.", "score": 84},
+    {"id": "l4", "name": "Tomas Bravo", "title": "Founding Engineer", "company": "Browserbase", "why": "Founding engineer at an agent infrastructure startup.", "score": 81},
+    {"id": "l5", "name": "Priya Menon", "title": "Senior Software Engineer", "company": "Temporal", "why": "Works on durable execution, close to long-running agent work.", "score": 77},
+    {"id": "l6", "name": "Leo Hartmann", "title": "Product Engineer", "company": "Resend", "why": "Small team shipping developer APIs.", "score": 72},
+    {"id": "l7", "name": "Ana Ruiz", "title": "Student", "company": "SF State", "why": "Peer at the event.", "score": 30}
+  ]
+}

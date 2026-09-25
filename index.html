@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Actintro Follow-ups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@900&family=Carlito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ground: #0a0b0b; --raised: #17181a; --ink: #f3f3f4; --muted: #a8abb1; --rule: #3a3c40;
+  --card: #f2efeb; --card-ink: #0a0a0a; --card-muted: #474645; --card-rule: #c2c0c1; --card-edge: #f2efeb;
+  --keep: #f8376b; --keep-ink: #0a0a0b; --tier: #68b86a; --tier-high: #c9e5c9; --tier-ink: #0a0a09;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1); color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--ground); color: var(--ink); font-family: Carlito, system-ui, sans-serif; font-size: 16px; }
+button { font: inherit; background: none; border: 0; color: inherit; cursor: pointer; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; max-width: 80rem; margin: 0 auto; padding: 1rem 2rem; border-bottom: 1px solid var(--rule); }
+.brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 1.1rem; }
+.brand svg { width: 1.6rem; height: 1.6rem; }
+.built { font-size: 0.85rem; color: var(--muted); }
+.intro { max-width: 46rem; margin: 14vh auto 0; padding: 0 2rem; }
+.intro h1 { font-size: 2.6rem; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; }
+.intro p { margin-top: 1rem; font-size: 1.2rem; line-height: 1.5; color: var(--muted); }
+.intro p b { color: var(--ink); }
+.primary { margin-top: 2rem; min-height: 3rem; padding: 0 1.8rem; border-radius: 0.5rem; background: var(--ink); color: var(--ground); font-weight: 700; font-size: 1.1rem; transition: transform 140ms var(--ease); }
+.primary:active, .dock button:active, .quick button:active { transform: scale(0.97); }
+.intro small { display: block; margin-top: 3rem; color: var(--muted); }
+.split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 2rem; max-width: 80rem; margin: 0 auto; padding: 1.5rem 2rem 3rem; }
+.head h1 { font-size: 1.6rem; letter-spacing: -0.01em; }
+.head p { margin-top: 0.25rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.card { margin-top: 1.1rem; border-radius: 0.85rem; background: var(--card); color: var(--card-ink); overflow: hidden; touch-action: pan-y; transition: transform 220ms var(--ease), opacity 220ms ease; }
+.card.dragging { transition: none; }
+.id { display: grid; grid-template-columns: 4.5rem 1fr auto; gap: 1rem; align-items: center; padding: 1.1rem 1.3rem; border-bottom: 1px solid var(--card-rule); }
+.photo { width: 4.5rem; height: 4.5rem; border-radius: 0.45rem; display: grid; place-items: center; font-weight: 700; font-size: 1.2rem; background: linear-gradient(160deg, #cfc9c3, #a9a39d); }
+.first { font-family: "Big Shoulders", "Arial Narrow", sans-serif; font-weight: 900; font-size: 2.3rem; line-height: 0.9; text-transform: uppercase; }
+.last { font-weight: 700; font-size: 1.15rem; }
+.role { margin-top: 0.2rem; font-size: 0.95rem; font-weight: 700; }
+.chip { display: inline-flex; margin-top: 0.35rem; padding: 0.15rem 0.45rem; border-radius: 0.3rem; background: var(--card-ink); color: var(--card); font-size: 0.82rem; font-weight: 700; }
+.channel { align-self: start; padding: 0.15rem 0.45rem; border: 1px solid var(--card-rule); border-radius: 0.3rem; font-size: 0.82rem; font-weight: 700; }
+.draft { padding: 1.1rem 1.3rem 0.4rem; }
+.subject { font-weight: 700; }
+.body { margin-top: 0.6rem; white-space: pre-line; line-height: 1.55; max-width: 62ch; }
+.tag { display: inline-block; margin-left: 0.4rem; padding: 0.05rem 0.4rem; border-radius: 0.3rem; background: var(--tier-high); color: var(--tier-ink); font-size: 0.78rem; font-weight: 700; }
+.why { margin: 0.8rem 1.3rem 0; padding-top: 0.75rem; border-top: 1px solid var(--card-rule); font-size: 0.95rem; }
+.src { padding: 0.5rem 1.3rem 1rem; font-size: 0.85rem; color: var(--card-muted); }
+.src a { color: inherit; }
+.band { display: flex; justify-content: space-between; padding: 0.7rem 1.3rem; background: var(--tier); color: var(--tier-ink); font-weight: 700; }
+.dock { display: grid; grid-template-columns: 1fr 1.6fr; gap: 0.6rem; margin-top: 0.9rem; }
+.dock button { min-height: 3rem; border-radius: 0.5rem; font-weight: 700; font-size: 1.1rem; transition: transform 140ms var(--ease); }
+.fixbtn { border: 1px solid var(--ink) !important; }
+.keep { background: var(--keep) !important; color: var(--keep-ink); }
+kbd { margin-left: 0.5rem; padding: 0 0.35rem; border: 1px solid currentColor; border-radius: 0.25rem; font: inherit; font-size: 0.8rem; opacity: 0.8; }
+.hint { margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted); text-align: center; }
+.pile { display: grid; gap: 0.5rem; margin-top: 1rem; }
+.mini { display: grid; grid-template-columns: 2.5rem 1fr; gap: 0.8rem; align-items: center; padding: 0.7rem 0.9rem; border: 1px solid var(--rule); border-radius: 0.7rem; background: var(--raised); }
+.av { width: 2.5rem; height: 2.5rem; border-radius: 9999px; display: grid; place-items: center; font-weight: 700; background: var(--card); color: var(--card-ink); font-size: 0.85rem; }
+.mini small { display: block; color: var(--muted); font-size: 0.85rem; }
+.qlabel { margin-top: 1.2rem; font-weight: 700; }
+.quick { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
+.quick button { min-height: 2.5rem; padding: 0 0.9rem; border: 1px solid var(--rule); border-radius: 0.5rem; font-weight: 700; transition: transform 140ms var(--ease); }
+.field { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.7rem; padding: 0.35rem 0.35rem 0.35rem 1rem; border: 1px solid var(--rule); border-radius: 1.5rem; background: var(--raised); }
+.field input { flex: 1; min-height: 2.5rem; border: 0; background: transparent; color: var(--ink); font: inherit; outline: none; }
+.send { width: 2.5rem; height: 2.5rem; border-radius: 9999px; display: grid; place-items: center; background: var(--ink); color: var(--ground); }
+.busy { margin-top: 1rem; padding: 0.8rem 1rem; border: 1px solid var(--rule); border-radius: 0.7rem; color: var(--muted); }
+.panel { position: sticky; top: 1rem; align-self: start; display: grid; gap: 1.1rem; padding: 1.2rem 1.25rem; border: 1px solid var(--rule); border-radius: 0.85rem; background: var(--raised); }
+.panel h2 { font-size: 1.06rem; }
+.loop { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.3rem; margin-top: 0.6rem; }
+.loop span { display: grid; place-items: center; min-height: 2.3rem; border-radius: 0.4rem; border: 1px solid var(--rule); font-size: 0.82rem; font-weight: 700; color: var(--muted); }
+.loop span.on { background: var(--ink); border-color: var(--ink); color: var(--ground); }
+.now { margin-top: 0.55rem; line-height: 1.45; }
+.feed { display: grid; gap: 0.35rem; margin-top: 0.5rem; }
+.feed p { display: grid; grid-template-columns: 4.8rem 1fr; gap: 0.6rem; font-size: 0.88rem; line-height: 1.35; }
+.feed b { font-size: 0.78rem; padding: 0.05rem 0.35rem; border-radius: 0.3rem; border: 1px solid var(--rule); justify-self: start; }
+.style { margin-top: 0.5rem; padding: 0.8rem 0.9rem; border-radius: 0.6rem; background: var(--card); color: var(--card-ink); list-style: none; }
+.style li { font-size: 0.92rem; line-height: 1.4; padding: 0.2rem 0; }
+.style li + li { border-top: 1px solid var(--card-rule); }
+.style li.new::after { content: " new"; font-size: 0.72rem; font-weight: 700; color: var(--card-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.style small { display: block; margin-top: 0.45rem; font-size: 0.8rem; color: var(--card-muted); }
+.legend { display: flex; gap: 1rem; margin-top: 0.4rem; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.legend i { display: inline-block; width: 0.8rem; height: 0.2rem; margin-right: 0.35rem; vertical-align: 0.2em; }
+@media (prefers-reduced-motion: reduce) { .card { transition: opacity 150ms ease; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <span class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="4" width="52" height="56" rx="9" fill="#f2efeb" stroke="#0b0b0c" stroke-width="4.5"/><rect x="24" y="11" width="16" height="4" rx="2" fill="#0b0b0c"/><path d="M24 50 32 24l8 26M27 42h10" fill="none" stroke="#0b0b0c" stroke-width="5" stroke-linejoin="round"/></svg>Actintro</span>
+  <span class="built">Built today: the follow-up agent, its memory and this view. Existing: Actintro's event research and ranking.</span>
+</header>
+<div id="app"></div>
+<script>
+const $ = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const initials = (n) => (n || "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+let S = null, fixing = false;
+
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  return r.json();
+}
+
+function panel(s) {
+  const steps = [["plan", "Plan"], ["act", "Act"], ["observe", "Observe"], ["self_correct", "Self-correct"]];
+  const kept = s.cards.filter((c) => c.status === "kept").length, fix = s.cards.filter((c) => c.status === "fix").length;
+  const now = {
+    plan: `Picked the ${s.leads_total} most relevant leads from the room, using the reader's goal.`,
+    act: `Writing each follow-up from the event page and what the web says about each person. ${s.cards.length} of ${s.leads_total} done.`,
+    observe: `You kept ${kept} and sent ${fix} back to fix. Each swipe is logged; none of them is re-read to write.`,
+    self_correct: s.new_rule ? `New rule on your style card: ${s.new_rule}. Rewrote the rejected drafts with it.` : "Turning your fix into a rule.",
+  }[s.step] || "";
+  const h = s.history_chars, c = s.context_chars, n = Math.max(h.length, 2);
+  const max = Math.max(...h, ...c, 1);
+  const pts = (arr) => arr.map((v, i) => `${10 + (i * 290) / (n - 1)},${110 - (v / max) * 100}`).join(" ");
+  const lastCtx = s.last_context ? (s.last_context / 1000).toFixed(1) + "K chars" : "none yet";
+  return `<aside class="panel" aria-label="What the agent is doing">
+    <section><h2>What the agent is doing</h2>
+      <div class="loop">${steps.map(([k, l]) => `<span class="${k === s.step ? "on" : ""}">${l}</span>`).join("")}</div>
+      <p class="now">${esc(now)}</p></section>
+    <section><h2>Tools, doing real work</h2><div class="feed">${s.feed.slice(-5).map((f) => `<p><b>${esc(f.tool)}</b>${esc(f.text)}</p>`).join("")}</div></section>
+    <section><h2>Your style: the only memory it reads</h2><ul class="style">
+      ${s.style.map((r) => `<li class="${r === s.new_rule ? "new" : ""}">${esc(r)}</li>`).join("")}
+      <small>Every fix becomes a rule here. The history is not re-read.</small></ul></section>
+    <section><h2>History grows, context doesn't</h2>
+      <svg viewBox="0 0 310 120" role="img" aria-label="Events logged rise while what the agent reads per draft stays flat" style="width:100%;display:block;margin-top:.5rem">
+        <line x1="10" y1="110" x2="300" y2="110" stroke="var(--rule)"/>
+        <polyline fill="none" stroke="var(--ink)" stroke-width="2.2" points="${pts(h)}"/>
+        <polyline fill="none" stroke="var(--tier)" stroke-width="2.2" points="${pts(c)}"/></svg>
+      <div class="legend"><span><i style="background:var(--ink)"></i>Events logged: ${s.events_logged}</span><span><i style="background:var(--tier)"></i>Read per draft: ${lastCtx}</span></div></section>
+  </aside>`;
+}
+
+function cardHtml(c) {
+  const [first, ...rest] = (c.lead.name || "").split(" ");
+  return `<article class="card" id="card" data-id="${c.id}">
+    <div class="id"><div class="photo">${esc(initials(c.lead.name))}</div>
+      <div><p class="first">${esc(first)}</p><p class="last">${esc(rest.join(" "))}</p>
+        <p class="role">${esc(c.lead.title)}</p><span class="chip">${esc(c.lead.company)}</span></div>
+      <span class="channel">${esc(c.channel)}</span></div>
+    <div class="draft">${c.subject ? `<p class="subject">${esc(c.subject)}</p>` : ""}
+      <p class="body">${esc(c.body)}${c.rule_applied ? `<span class="tag">${esc(c.rule_applied)}</span>` : ""}</p></div>
+    <p class="why"><b>Why them:</b> ${esc(c.why)}</p>
+    ${c.sources.length ? `<p class="src">From: ${c.sources.map((x) => `<a href="${esc(x.url)}" target="_blank" rel="noreferrer">${esc(x.title)}</a>`).join(" · ")}</p>` : ""}
+    <div class="band"><span>Top match</span><small>${esc(c.lead.why || "")}</small></div>
+  </article>
+  <div class="dock"><button class="fixbtn" data-act="fix">Fix<kbd>&larr;</kbd></button><button class="keep" data-act="keep">Keep<kbd>&rarr;</kbd></button></div>
+  <p class="hint">Swipe or use the arrow keys. Kept drafts go to your Inbox, ready to send.</p>`;
+}
+
+function render() {
+  const app = document.getElementById("app");
+  const s = S;
+  if (!s || (!s.cards.length && !s.busy.on)) {
+    app.innerHTML = `<section class="intro"><h1>Missed the people you meant to meet at last night's event?</h1>
+      <p>Actintro read the room, researched your best leads on the web, and wrote the follow-ups. <b>You just swipe.</b> Keep it, or tell it what to fix. It learns your style as you go, without re-reading everything you ever said.</p>
+      <button class="primary" id="go">Show me</button><small>${esc(s?.event?.title || "")}</small></section>`;
+    document.getElementById("go").onclick = async () => { await api("/api/start", {}); poll(); };
+    return;
+  }
+  const pending = s.cards.filter((c) => c.status === "pending");
+  const fix = s.cards.filter((c) => c.status === "fix");
+  const kept = s.cards.filter((c) => c.status === "kept").length;
+  let main;
+  if (pending.length) {
+    main = `<div class="head"><h1>${s.new_rule ? "Rewritten with your rule" : "Follow-ups ready"}</h1>
+      <p>${esc(s.event.title || "")} · ${kept + fix.length + 1} of ${s.cards.length} for your most relevant leads</p></div>${cardHtml(pending[0])}`;
+  } else if (fix.length) {
+    main = `<div class="head"><h1>${fix.length} to fix</h1><p>You sent these back. Fix them all at once.</p></div>
+      <div class="pile">${fix.map((c) => `<div class="mini"><span class="av">${esc(initials(c.lead.name))}</span><p><b>${esc(c.lead.name)}</b><small>${esc(c.lead.title)}, ${esc(c.lead.company)} · ${esc(c.channel)}</small></p></div>`).join("")}</div>
+      <p class="qlabel">Fix all ${fix.length} in one tap</p>
+      <div class="quick">${["Shorter", "Warmer", "No job ask", "Mention their talk"].map((q) => `<button data-q="${q}">${q}</button>`).join("")}</div>
+      <form class="field" id="fixform"><input id="fixin" aria-label="Tell Actintro how to fix these" placeholder="Or say how, e.g. open with the Firebase demo"><button class="send" aria-label="Send">&uarr;</button></form>`;
+  } else {
+    main = `<div class="head"><h1>${s.busy.on ? "Writing follow-ups" : `All done: ${kept} kept`}</h1><p>${s.busy.on ? "" : "Kept drafts are in your Inbox, ready to send."}</p></div>`;
+  }
+  if (s.busy.on) main += `<p class="busy">${esc(s.busy.what)}… ${s.cards.length} of ${s.leads_total || "?"} written</p>`;
+  app.innerHTML = `<div class="split"><main>${main}</main>${panel(s)}</div>`;
+  const card = document.getElementById("card");
+  if (card) wire(card, pending[0]);
+  document.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => sendFix(b.dataset.q, fix)));
+  const form = document.getElementById("fixform");
+  if (form) form.onsubmit = (e) => { e.preventDefault(); const v = document.getElementById("fixin").value.trim(); if (v) sendFix(v, fix); };
+}
+
+async function decide(c, keep) {
+  const el = document.getElementById("card");
+  if (el) { el.style.transform = `translateX(${keep ? 120 : -120}%) rotate(${keep ? 6 : -6}deg)`; el.style.opacity = "0"; }
+  await api("/api/swipe", { id: c.id, keep });
+  setTimeout(poll, 180);
+}
+async function sendFix(text, cards) { if (fixing) return; fixing = true; await api("/api/fix", { ids: cards.map((c) => c.id), instruction: text }); fixing = false; poll(); }
+
+function wire(el, c) {
+  document.querySelectorAll("[data-act]").forEach((b) => (b.onclick = () => decide(c, b.dataset.act === "keep")));
+  let x0 = null;
+  el.onpointerdown = (e) => { x0 = e.clientX; el.classList.add("dragging"); el.setPointerCapture(e.pointerId); };
+  el.onpointermove = (e) => { if (x0 === null) return; const dx = e.clientX - x0; el.style.transform = `translateX(${dx}px) rotate(${dx / 40}deg)`; };
+  el.onpointerup = (e) => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; el.classList.remove("dragging");
+    if (Math.abs(dx) > 120) decide(c, dx > 0); else el.style.transform = ""; };
+}
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest("input")) return;
+  const c = S && S.cards.find((x) => x.status === "pending");
+  if (!c) return;
+  if (e.key === "ArrowRight") decide(c, true);
+  if (e.key === "ArrowLeft") decide(c, false);
+});
+
+let last = "";
+async function poll() {
+  S = await api("/api/state");
+  const sig = JSON.stringify([S.step, S.busy, S.cards.map((c) => [c.id, c.status, c.version]), S.events_logged, S.style]);
+  if (sig !== last) { last = sig; render(); }
+}
+poll(); setInterval(poll, 1200);
+</script>
+</body>
+</html>
