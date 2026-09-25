@@ -16,6 +16,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import llm
@@ -25,6 +26,8 @@ from sponsors import Log, Web
 HERE = Path(__file__).resolve().parent
 ROOM = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "sample_room.json"
 app = FastAPI()
+(HERE / "faces").mkdir(exist_ok=True)
+app.mount("/faces", StaticFiles(directory=HERE / "faces"), name="faces")
 lock = threading.Lock()
 agent = Agent(State.load(), Log(), Web())
 busy = {"on": False, "what": ""}
@@ -78,20 +81,27 @@ class Fix(BaseModel):
 
 @app.get("/")
 def page():
-    return FileResponse(HERE / "index.html")
+    # Always the latest page: no cached copy between edits or takes.
+    return FileResponse(HERE / "index.html", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/api/state")
 def state():
     s = agent.s
     leads = {l["id"]: l for l in s.leads}
-    cards = [{**c.__dict__, "lead": {k: leads.get(c.lead_id, {}).get(k) for k in ("name", "title", "company", "why")}}
+    # A face shows only when faces.py saved one for this lead (made-up people, AI-generated faces).
+    face = lambda lid: f"faces/{lid}.jpg" if (HERE / "faces" / f"{lid}.jpg").exists() else ""  # noqa: E731
+    # words is the same count the agent's length check uses, so the page shows it rather than counting again.
+    cards = [{**c.__dict__, "words": len(c.body.split()),
+              "lead": {**{k: leads.get(c.lead_id, {}).get(k) for k in ("name", "title", "company", "why")},
+                       "photo": face(c.lead_id)}}
              for c in s.cards]
     return {"step": s.step, "busy": busy, "event": s.event, "style": s.style, "new_rule": s.new_rule,
             "feed": s.feed, "cards": cards, "events_logged": s.events_logged,
             "context_chars": s.context_series[-60:], "history_chars": s.history_chars[-60:],
             "last_context": s.context_chars[-1] if s.context_chars else 0,
-            "leads_total": len(s.leads)}
+            "leads_total": len(s.leads), "faces": any(c["lead"]["photo"] for c in cards),
+            "max_words": s.max_words, "can_undo": any(c.status != "pending" for c in s.cards if c.id in s.swiped)}
 
 
 @app.post("/api/start")
@@ -133,7 +143,8 @@ def undo():
     if busy["on"]:
         return {"ok": False, "reason": "busy"}
     with lock:
-        return {"ok": agent.undo()}
+        card_id = agent.undo()
+        return {"ok": bool(card_id), "id": card_id}
 
 
 @app.post("/api/swipe")

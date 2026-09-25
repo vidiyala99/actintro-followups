@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 
 import uuid
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -182,7 +182,9 @@ class Agent:
         system = ("Write one follow-up from the reader to this person, after an event they both attended but did not "
                   "talk at. The READER is the sender: everything under READER is the sender's own background and work, "
                   "never the person's, so never praise the person for it. Follow every rule on the style card exactly. Use only facts on the lead card and the event "
-                  "card; never invent. Plain text. No em dashes. No links. Pick the channel: Email when the lead card "
+                  "card; never invent. Facts win over rules: when a rule or a fix asks for something the cards do not "
+                  "show (a talk they gave, a post they wrote), never claim it; use the closest real thing the cards do "
+                  "show instead (a talk at the event, their company's open role, their team's work). Plain text. No em dashes. No links. Pick the channel: Email when the lead card "
                   "has an email or a hiring angle, else LinkedIn note. `why` is one line on why this person, for the "
                   "reader. End the body with exactly this line and nothing after it, no sign-off: " + CLOSING +
                   (f"\n\nFIX: {extra}" if extra else ""))
@@ -191,7 +193,7 @@ class Agent:
                    f"\n\nREADER\n{self.s.reader}"
                    f"\n\nLEAD CARD\n{json.dumps({k: lead.get(k) for k in ('name', 'title', 'company', 'why', 'facts')}, ensure_ascii=False)}")
         ans: dict = {}
-        for _ in range(3):
+        for _ in range(4):  # exact checks send it back; a draft still over the limit is kept and flagged on the card
             ans, _ = llm.ask(system, context, self.DRAFT_SCHEMA, max_tokens=900)
             text = ans["subject"] + " " + ans["body"]
             # Exact checks only (no-handrolling.md): an em dash, a link, or a body that does not end with the reader's
@@ -244,18 +246,18 @@ class Agent:
         self.note("Rawtree", "swipe", f"{'Kept' if keep else 'Sent back to fix'}: {lead['name']}.", card=card_id)
         self.s.save()
 
-    def undo(self) -> bool:
-        """Put the most recently swiped card that is still decided back on top of the deck."""
+    def undo(self) -> str:
+        """Put the most recently swiped card that is still decided back in the deck; returns its id ("" if none)."""
         while self.s.swiped:
             last_id = self.s.swiped.pop()
             card = next((c for c in self.s.cards if c.id == last_id), None)
             if card and card.status != "pending":  # a card a fix already rewrote is pending again: skip it
                 card.status = "pending"
                 self.s.step = "observe"
-                self.note("Rawtree", "undo", f"Undid: {self.lead(card.lead_id)['name']} is back on top.", card=card.id)
+                self.note("Rawtree", "undo", f"Undid: {self.lead(card.lead_id)['name']} is back in the deck.", card=card.id)
                 self.s.save()
-                return True
-        return False
+                return card.id
+        return ""
 
     # ---- self-correct ----
     RULE_SCHEMA = {
@@ -271,7 +273,8 @@ class Agent:
         ans, _ = llm.ask(
             "The reader rejected these drafts and said how to fix them. Turn that into ONE short, general rule for all "
             "future drafts (not about one person), and return the updated style card: keep the existing rules, merge or "
-            "replace any the new rule contradicts, at most 8 rules, each under 12 words. `max_words`: the longest a "
+            "replace any the new rule contradicts, at most 8 rules, each under 12 words. Add only the rule the reader "
+            "asked for; never add a rule they did not ask for. `max_words`: the longest a "
             "message body may be under the updated card (the number in its length rule, clearly below the rejected "
             "drafts if the reader asked for shorter), or 0 if the card has no length rule.",
             f"STYLE CARD\n- " + "\n- ".join(self.s.style) + f"\n\nREADER SAID: {instruction}\n\nREJECTED:\n" +
@@ -279,14 +282,18 @@ class Agent:
             self.RULE_SCHEMA, max_tokens=500)
         self.s.style, self.s.new_rule, self.s.max_words = ans["style"], ans["rule"], int(ans.get("max_words") or 0)
         self.note("Bedrock", "rule", f"New rule on your style card: {ans['rule']}")
-        for c in cards:
-            lead = self.lead(c.lead_id)
-            new, size = self._draft(lead, extra=instruction)
-            self.s.context_chars.append(size)
-            c.channel, c.subject, c.body, c.why = new["channel"], new["subject"], new["body"], new["why"]
-            c.status, c.version, c.rule_applied = "pending", c.version + 1, ans["rule"]
-            self.note("Bedrock", "rewrite", f"Rewrote {lead['name']} with the new rule.", context_chars=size)
-        self.s.save()
+        # Rewrites are independent (each reads only the style card, the event card and its own lead card), so they run
+        # at the same time; each card is applied and saved as it lands, here on this one thread.
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            jobs = {pool.submit(self._draft, self.lead(c.lead_id), instruction): c for c in cards}
+            for done in as_completed(jobs):
+                c = jobs[done]
+                new, size = done.result()
+                self.s.context_chars.append(size)
+                c.channel, c.subject, c.body, c.why = new["channel"], new["subject"], new["body"], new["why"]
+                c.status, c.version, c.rule_applied = "pending", c.version + 1, ans["rule"]
+                self.note("Bedrock", "rewrite", f"Rewrote {self.lead(c.lead_id)['name']} with the new rule.", context_chars=size)
+                self.s.save()
 
     def lead(self, lead_id: str) -> dict:
         return next(l for l in self.s.leads if l["id"] == lead_id)

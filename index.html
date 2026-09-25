@@ -11,7 +11,7 @@
   --ground: #0a0b0b; --raised: #17181a; --ink: #f3f3f4; --muted: #a8abb1; --rule: #3a3c40;
   --card: #f2efeb; --card-ink: #0a0a0a; --card-muted: #474645; --card-rule: #c2c0c1; --card-edge: #f2efeb;
   --keep: #f8376b; --keep-ink: #0a0a0b; --tier: #68b86a; --tier-high: #c9e5c9; --tier-ink: #0a0a09;
-  --ease: cubic-bezier(0.23, 1, 0.32, 1); color-scheme: dark;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1); --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); color-scheme: dark;
 }
 * { box-sizing: border-box; margin: 0; }
 body { background: var(--ground); color: var(--ink); font-family: Carlito, system-ui, sans-serif; font-size: 16px; }
@@ -33,12 +33,24 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 2rem; max-width: 80rem; height: 100%; margin: 0 auto; padding: 1.25rem 2rem 1.25rem; }
 .split > main { display: flex; flex-direction: column; min-height: 0; }
 .split > main > .scrollmain { flex: 1; min-height: 0; overflow-y: auto; }
+.pile.scrolly { flex: 1 1 auto; min-height: 4rem; overflow-y: auto; align-content: start; padding-right: 0.2rem; }
+.quick, .field, .qlabel { flex: none; }
 ::selection { background: var(--keep); color: var(--keep-ink); }
 * { scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
 .card * { scrollbar-color: var(--card-rule) transparent; }
 .head h1 { font-size: 1.6rem; letter-spacing: -0.01em; }
 .head p { margin-top: 0.25rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.card { flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: 0.9rem; border-radius: 0.85rem; background: var(--card); color: var(--card-ink); overflow: hidden; touch-action: pan-y; transition: transform 220ms var(--ease), opacity 220ms ease; }
+.card { flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: 0.9rem; border-radius: 0.85rem; background: var(--card); color: var(--card-ink); overflow: hidden; touch-action: pan-y; position: relative; transition: transform 340ms var(--ease), opacity 340ms ease; }
+/* The next card rises in once; the leaving card carries a stamp of what the reader decided. */
+.card.enter { animation: card-in 240ms var(--ease) both; }
+@keyframes card-in { from { opacity: 0; transform: translateY(12px) scale(0.985); } }
+.stamp { position: absolute; top: 1.1rem; right: 1.3rem; z-index: 1; padding: 0.3rem 0.8rem; border-radius: 0.4rem; font-weight: 700; font-size: 1.1rem; opacity: 0; transform: scale(0.9); transition: opacity 120ms ease, transform 160ms var(--ease); }
+.stamp.kept { background: var(--keep); color: var(--keep-ink); }
+.stamp.fix { background: var(--card); color: var(--card-ink); border: 2px solid var(--card-ink); }
+.card.leaving .stamp { opacity: 1; transform: scale(1); }
+/* Two beats: the card nudges toward its side while the stamp reads, then travels off where the eye can follow it. */
+.card.leaving { transition: transform 180ms var(--ease), opacity 180ms ease; }
+.card.leaving.gone { transition: transform 280ms var(--ease-in-out), opacity 280ms ease-in-out; }
 .card .scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: 0.4rem;
   mask-image: linear-gradient(to bottom, #000 calc(100% - 2.2rem), transparent); }
 .card .scroll:focus-visible { outline: 2px solid var(--card-ink); outline-offset: -2px; }
@@ -53,6 +65,7 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .draft { padding: 1.1rem 1.3rem 0.4rem; }
 .subject { font-weight: 700; }
 .body { margin-top: 0.6rem; white-space: pre-line; line-height: 1.55; max-width: 62ch; }
+.tag.over { background: transparent; border: 1px solid var(--card-ink); color: var(--card-ink); }
 .tag { display: inline-block; margin-left: 0.4rem; padding: 0.05rem 0.4rem; border-radius: 0.3rem; background: var(--tier-high); color: var(--tier-ink); font-size: 0.78rem; font-weight: 700; }
 .why { margin: 0.8rem 1.3rem 0; padding-top: 0.75rem; border-top: 1px solid var(--card-rule); font-size: 0.95rem; }
 .src { padding: 0.5rem 1.3rem 1rem; font-size: 0.85rem; color: var(--card-muted); }
@@ -67,6 +80,9 @@ kbd { margin-left: 0.5rem; padding: 0 0.35rem; border: 1px solid currentColor; b
 .hint { margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted); text-align: center; }
 .pile { display: grid; gap: 0.5rem; margin-top: 1rem; }
 .mini { display: grid; grid-template-columns: 2.5rem 1fr; gap: 0.8rem; align-items: center; padding: 0.7rem 0.9rem; border: 1px solid var(--rule); border-radius: 0.7rem; background: var(--raised); }
+.photo img, .av img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+.photo, .av { overflow: hidden; }
+.facenote { display: block; margin-top: 0.15rem; font-size: 0.78rem; color: var(--muted); }
 .av { width: 2.5rem; height: 2.5rem; border-radius: 9999px; display: grid; place-items: center; font-weight: 700; background: var(--card); color: var(--card-ink); font-size: 0.85rem; }
 .mini small { display: block; color: var(--muted); font-size: 0.85rem; }
 .qlabel { margin-top: 1.2rem; font-weight: 700; }
@@ -75,6 +91,7 @@ kbd { margin-left: 0.5rem; padding: 0 0.35rem; border: 1px solid currentColor; b
 .field { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.7rem; padding: 0.35rem 0.35rem 0.35rem 1rem; border: 1px solid var(--rule); border-radius: 1.5rem; background: var(--raised); }
 .field input { flex: 1; min-height: 2.5rem; border: 0; background: transparent; color: var(--ink); font: inherit; outline: none; }
 .send { width: 2.5rem; height: 2.5rem; border-radius: 9999px; display: grid; place-items: center; background: var(--ink); color: var(--ground); }
+.quick button:disabled, .field input:disabled { opacity: 0.45; cursor: default; }
 .busy { margin-top: 1rem; padding: 0.8rem 1rem; border: 1px solid var(--rule); border-radius: 0.7rem; color: var(--muted); }
 .panel { align-self: stretch; min-height: 0; overflow-y: auto; display: grid; gap: 1.1rem; padding: 1.2rem 1.25rem; border: 1px solid var(--rule); border-radius: 0.85rem; background: var(--raised); }
 .panel h2 { font-size: 1.06rem; }
@@ -94,6 +111,17 @@ kbd { margin-left: 0.5rem; padding: 0 0.35rem; border: 1px solid currentColor; b
 .legend i { display: inline-block; width: 0.8rem; height: 0.2rem; margin-right: 0.35rem; vertical-align: 0.2em; }
 .nav { flex: none; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
 .head { flex: none; }
+.pager { display: flex; align-items: center; gap: 0.35rem; margin-top: 0.25rem; color: var(--muted); }
+.pager p { margin: 0 0.4rem 0 0; }
+.pager .grow { flex: 1; }
+.pager h1 { margin-right: auto; color: var(--ink); }
+.pg { display: inline-grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid var(--rule); border-radius: 0.4rem; font-size: 1.25rem; line-height: 1; color: var(--ink); transition: transform 140ms var(--ease), border-color 160ms ease; }
+.pg svg { width: 1rem; height: 1rem; }
+.pg:hover:not(:disabled) { border-color: var(--muted); }
+.pg:active:not(:disabled) { transform: scale(0.94); }
+.pg:disabled { opacity: 0.35; cursor: default; }
+.pg:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.pgn { min-width: 7.5rem; text-align: center; font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 700; font-size: 0.92rem; }
 .send-btn { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.25rem; padding: 0 0.9rem; border-radius: 0.45rem; border: 1px solid var(--ink); font-weight: 700; font-size: 0.92rem; transition: transform 140ms var(--ease), background-color 160ms ease, color 160ms ease; }
 .send-btn:hover { background: var(--ink); color: var(--ground); }
 .send-btn:active { transform: scale(0.97); }
@@ -116,7 +144,8 @@ button.mini:hover { border-color: var(--muted); }
 .back { font-size: 0.92rem; color: var(--muted); }
 .back:hover { color: var(--ink); }
 .readonly { margin-top: 0.7rem; font-size: 0.85rem; color: var(--muted); text-align: center; }
-@media (prefers-reduced-motion: reduce) { .card { transition: opacity 150ms ease; } }
+@media (prefers-reduced-motion: reduce) { .card { transition: opacity 200ms ease; } .card.enter { animation: card-fade 200ms ease both; } }
+@keyframes card-fade { from { opacity: 0; } }
 </style>
 </head>
 <body>
@@ -128,8 +157,8 @@ button.mini:hover { border-color: var(--muted); }
 <script>
 const $ = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const initials = (n) => (n || "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-let S = null, fixing = false, view = "auto", openId = null, sendTarget = null;
+const initials = (n) => (n || "").split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+let S = null, idx = 0, focusId = null, shownCardId = null, leaving = false, awaitingFix = false, fixing = false, view = "auto", openId = null, sendTarget = null;
 
 async function api(path, body) {
   const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
@@ -143,7 +172,7 @@ function panel(s) {
     plan: `Picked the ${s.leads_total} most relevant leads from the room, using the reader's goal.`,
     act: `Writing each follow-up from the event page and what the web says about each person. ${s.cards.length} of ${s.leads_total} done.`,
     observe: `You kept ${kept} and sent ${fix} back to fix. Each swipe is logged; none of them is re-read to write.`,
-    self_correct: s.new_rule ? `New rule on your style card: ${s.new_rule}. Rewrote the rejected drafts with it.` : "Turning your fix into a rule.",
+    self_correct: s.new_rule ? `New rule on your style card: “${s.new_rule}” Rewrote the rejected drafts with it.` : "Turning your fix into a rule.",
   }[s.step] || "";
   const h = s.history_chars, c = s.context_chars, n = Math.max(h.length, 2);
   const max = Math.max(...h, ...c, 1);
@@ -166,28 +195,34 @@ function panel(s) {
   </aside>`;
 }
 
-function cardHtml(c) {
+// A rewrite that still runs past the style card's limit says so instead of passing quietly (count from the server).
+function over(c) {
+  const max = S && S.max_words;
+  return max && c.words > max ? `<span class="tag over">${c.words} of ${max} words</span>` : "";
+}
+function cardHtml(c, withActions = true) {
   const [first, ...rest] = (c.lead.name || "").split(" ");
-  return `<article class="card" id="card" data-id="${c.id}">
-    <div class="id"><div class="photo">${esc(initials(c.lead.name))}</div>
+  return `<article class="card${withActions && c.id !== shownCardId ? " enter" : ""}" id="card" data-id="${c.id}"><span class="stamp" aria-hidden="true"></span>
+    <div class="id"><div class="photo">${c.lead.photo ? `<img src="${esc(c.lead.photo)}" alt="AI-generated face for ${esc(c.lead.name)}">` : esc(initials(c.lead.name))}</div>
       <div><p class="first">${esc(first)}</p><p class="last">${esc(rest.join(" "))}</p>
         <p class="role">${esc(c.lead.title)}</p><span class="chip">${esc(c.lead.company)}</span></div>
       <span class="channel">${esc(c.channel)}</span></div>
     <div class="scroll" tabindex="0" aria-label="Draft">
     <div class="draft">${c.subject ? `<p class="subject">${esc(c.subject)}</p>` : ""}
-      <p class="body">${esc(c.body)}${c.rule_applied ? `<span class="tag">${esc(c.rule_applied)}</span>` : ""}</p></div>
+      <p class="body">${esc(c.body)}${c.rule_applied ? `<span class="tag">${esc(c.rule_applied)}</span>` : ""}${over(c)}</p></div>
     <p class="why"><b>Why them:</b> ${esc(c.why)}</p>
     ${c.sources.length ? `<p class="src">From: ${c.sources.map((x) => `<a href="${esc(x.url)}" target="_blank" rel="noreferrer">${esc(x.title)}</a>`).join(" · ")}</p>` : ""}
     </div>
     <div class="band"><span>Top match</span><small>${esc(c.lead.why || "")}</small></div>
   </article>
-  <div class="dock"><button class="fixbtn" data-act="fix">Fix<kbd>&larr;</kbd></button><button class="keep" data-act="keep">Keep<kbd>&rarr;</kbd></button></div>
-`;
+  ${withActions ? `<div class="dock"><button class="fixbtn" data-act="fix">Fix<kbd>&larr;</kbd></button><button class="keep" data-act="keep">Keep<kbd>&rarr;</kbd></button></div>` : ""}`;
 }
 
 function render() {
   const app = document.getElementById("app");
   const s = S;
+  document.querySelector(".built").textContent = "Built today: the follow-up agent, its memory and this view. Sample room: made-up people at real companies"
+    + (s && s.faces ? ", faces AI-generated with FLUX." : ".");
   if (!s || (!s.cards.length && !s.busy.on)) {
     app.innerHTML = `<section class="intro"><h1>Missed the people you meant to meet at last night's event?</h1>
       <p>Actintro read the room, researched your best leads on the web, and wrote the follow-ups. <b>You just swipe.</b> Keep it, or tell it what to fix. It learns your style as you go, without re-reading everything you ever said.</p>
@@ -201,45 +236,63 @@ function render() {
   // "auto" follows the flow (review, then fix, then kept); a tab pins a pile until the reader picks another.
   const v = view !== "auto" ? view : pending.length ? "review" : fix.length ? "fix" : "kept";
   // Send acts on the one draft on screen: an opened card, else the top of the review deck.
-  const current = (openId && s.cards.find((c) => c.id === openId)) || (v === "review" ? pending[0] : null);
+  // The pager: which of the cards still to review is showing. Undo asks for the card it put back.
+  if (focusId) { const at = pending.findIndex((c) => c.id === focusId); if (at >= 0) idx = at; focusId = null; }
+  idx = Math.max(0, Math.min(idx, pending.length - 1));
+  const top = pending[idx];
+  const current = (openId && s.cards.find((c) => c.id === openId)) || (v === "review" ? top : null);
   sendTarget = current || null;
+  // Undo sits with the card actions; Start over stays alone at the top (it wipes the session).
+  const undoBtn = s.can_undo ? `<button class="navlink" data-nav="undo" title="Put the last card back">Undo<kbd>Backspace</kbd></button>` : "";
+  const headRow = (title) => `<div class="pager"><h1>${title}</h1><span class="grow"></span>${undoBtn}</div>`;
+  const sendBtn = current ? `<button class="send-btn" data-nav="send" title="${current ? `Open the draft to ${esc(current.lead.name)} in Gmail` : "Open a draft to send it"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>Send</button>` : "";
   const tab = (k, label, n) => `<button role="tab" aria-selected="${v === k}" data-view="${k}">${label}<span class="n">${n}</span></button>`;
   const nav = `<nav class="nav" aria-label="Your follow-ups">
       <div class="tabs" role="tablist">${tab("review", "To review", pending.length)}${tab("fix", "To fix", fix.length)}${tab("kept", "Kept", kept)}</div>
       <span class="grow"></span>
-      <button class="navlink" data-nav="undo" title="Put the last card back">Undo<kbd>Backspace</kbd></button>
-      <button class="send-btn" data-nav="send" ${current ? "" : "disabled"} title="${current ? `Open the draft to ${esc(current.lead.name)} in Gmail` : "Open a draft to send it"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>Send</button>
       <button class="navlink" data-nav="reset" title="Back to the first drafts, style card cleared">Start over</button></nav>`;
-  const row = (c, st) => `<button class="mini${st ? " has-st" : ""}" data-open="${c.id}"><span class="av">${esc(initials(c.lead.name))}</span><p><b>${esc(c.lead.name)}</b><small>${esc(c.lead.title)}, ${esc(c.lead.company)} · ${esc(c.channel)}</small></p>${st ? `<span class="st">${esc(st)}</span>` : ""}</button>`;
+  const row = (c, st) => `<button class="mini${st ? " has-st" : ""}" data-open="${c.id}"><span class="av">${c.lead.photo ? `<img src="${esc(c.lead.photo)}" alt="">` : esc(initials(c.lead.name))}</span><p><b>${esc(c.lead.name)}</b><small>${esc(c.lead.title)}, ${esc(c.lead.company)} · ${esc(c.channel)}</small></p>${st ? `<span class="st">${esc(st)}</span>` : ""}</button>`;
+  const fixing = s.busy.on && s.busy.what === "Fixing";
+  const busyLine = !s.busy.on ? "" : fixing
+    ? (s.step === "self_correct" && s.new_rule ? `New rule learned. Rewriting ${fix.length} drafts with it…` : "Turning your fix into a rule on your style card…")
+    : `Writing follow-ups… ${s.cards.length} of ${s.leads_total || "?"} written`;
+  const busyP = busyLine ? `<p class="busy">${esc(busyLine)}</p>` : "";
+  const off = fixing ? "disabled" : "";
   let main;
   const open = openId && s.cards.find((c) => c.id === openId);
   if (open) {
     const back = v === "kept" ? "Kept" : v === "fix" ? "To fix" : "To review";
-    main = `<div class="head"><button class="back" data-open="">&larr; Back to ${back}</button></div>${cardHtml(open).split('<div class="dock">')[0]}<p class="readonly">${open.status === "kept" ? "Kept. It is in your Inbox, ready to send." : "Sent back to fix."}</p>`;
+    main = `<div class="head pager"><button class="back" data-open="">&larr; Back to ${back}</button><span class="grow"></span>${undoBtn}${sendBtn}</div>${cardHtml(open, false)}<p class="readonly">${open.status === "kept" ? "Kept. It is in your Inbox, ready to send." : "Sent back to fix."}</p>`;
   } else if (v === "review" && pending.length) {
     main = `<div class="head"><h1>${s.new_rule ? "Rewritten with your rule" : "Follow-ups ready"}</h1>
-      <p>${esc(s.event.title || "")} · ${kept + fix.length + 1} of ${s.cards.length} for your most relevant leads</p></div>${cardHtml(pending[0])}`;
+      <div class="pager"><p>${esc(s.event.title || "")}</p>
+        <button class="pg" data-pg="-1" ${idx === 0 ? "disabled" : ""} aria-label="Previous card" title="Previous card (Up)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+        <span class="pgn">${idx + 1} of ${pending.length} to review</span>
+        <button class="pg" data-pg="1" ${idx >= pending.length - 1 ? "disabled" : ""} aria-label="Next card" title="Next card (Down)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+        <span class="grow"></span>${undoBtn}${sendBtn}</div></div>${cardHtml(top)}`;
   } else if (v === "fix" && fix.length) {
-    main = `<div class="head"><h1>${fix.length} to fix</h1><p>You sent these back. Fix them all at once, or open one to reread it.</p></div>
-      <div class="pile">${fix.map((c) => row(c)).join("")}</div>
-      <p class="qlabel">Fix all ${fix.length} in one tap</p>
-      <div class="quick">${["Shorter", "Warmer", "No job ask", "Mention their talk"].map((q) => `<button data-q="${q}">${q}</button>`).join("")}</div>
-      <form class="field" id="fixform"><input id="fixin" aria-label="Tell Actintro how to fix these" placeholder="Or say how, e.g. open with the Firebase demo"><button class="send" aria-label="Send">&uarr;</button></form>`;
+    main = `<div class="head">${headRow(`${fix.length} to fix`)}<p>You sent these back. Fix them all at once, or open one to reread it.</p></div>
+      <div class="pile scrolly">${fix.map((c) => row(c)).join("")}</div>
+      ${busyP}<p class="qlabel">Fix all ${fix.length} in one tap</p>
+      <div class="quick">${["Shorter", "Warmer", "No job ask", "Mention their talk"].map((q) => `<button ${off} data-q="${q}">${q}</button>`).join("")}</div>
+      <form class="field" id="fixform"><input ${off} id="fixin" aria-label="Tell Actintro how to fix these" placeholder="Or say how, e.g. open with the Firebase demo"><button class="send" aria-label="Send">&uarr;</button></form>`;
   } else if (v === "kept" && kept) {
-    main = `<div class="head"><h1>${pending.length || fix.length ? `${kept} kept so far` : `All done: ${kept} kept`}</h1><p>Kept drafts are in your Inbox, ready to send. Open one to read it.</p></div>
+    main = `<div class="head">${headRow(pending.length || fix.length ? `${kept} kept so far` : `All done: ${kept} kept`)}<p>Kept drafts are in your Inbox, ready to send. Open one to read it.</p></div>
       <div class="pile">${keptCards.map((c) => row(c, c.version > 1 ? "Rewritten" : "")).join("")}</div>`;
   } else {
     const empty = { review: "Nothing left to review", fix: "Nothing to fix", kept: "Nothing kept yet" }[v];
     const hint = { review: `You've been through all ${s.cards.length}.${fix.length ? ` Fix the ${fix.length} you sent back,` : ""}${kept ? ` or read the ${kept} you kept.` : ""}`,
                    fix: "Everything you sent back has been rewritten.", kept: "Swipe right on a draft to keep it." }[v];
-    main = `<div class="head"><h1>${s.busy.on ? "Writing follow-ups" : empty}</h1>${s.busy.on ? "" : `<p>${esc(hint)}</p>`}</div>`;
+    main = `<div class="head">${headRow(s.busy.on ? "Writing follow-ups" : empty)}${s.busy.on ? "" : `<p>${esc(hint)}</p>`}</div>`;
   }
-  const fits = open || (v === "review" && pending.length);  // a card view fits the screen; lists scroll
+  // Card views and the fix pile fit the screen (their actions stay visible; the pile scrolls inside); other lists scroll.
+  const fits = open || (v === "review" && pending.length) || (v === "fix" && fix.length);
   main = (s.cards.length ? nav : "") + (fits ? main : `<div class="scrollmain">${main}</div>`);
-  if (s.busy.on) main += `<p class="busy">${esc(s.busy.what)}… ${s.cards.length} of ${s.leads_total || "?"} written</p>`;
+  if (busyLine && !(v === "fix" && fix.length && !open)) main += busyP;  // the fix pile shows it above its buttons
   app.innerHTML = `<div class="split"><main>${main}</main>${panel(s)}</div>`;
   const card = document.getElementById("card");
-  if (card && !open) wire(card, pending[0]);
+  if (card && !open) { wire(card, top); shownCardId = top.id; }
+  document.querySelectorAll("[data-pg]").forEach((b) => (b.onclick = () => page(Number(b.dataset.pg))));
   document.querySelectorAll("[data-view]").forEach((b) => (b.onclick = () => { view = b.dataset.view; openId = null; render(); }));
   document.querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => { openId = b.dataset.open || null; render(); }));
   document.querySelectorAll("[data-nav]").forEach((b) => (b.onclick = () => nav_(b.dataset.nav)));
@@ -248,11 +301,33 @@ function render() {
   if (form) form.onsubmit = (e) => { e.preventDefault(); const v = document.getElementById("fixin").value.trim(); if (v) sendFix(v, fix); };
 }
 
+// Move through the cards still to review without deciding anything.
+function page(step) {
+  if (leaving || !S) return;
+  const n = S.cards.filter((c) => c.status === "pending").length;
+  const next = Math.max(0, Math.min(idx + step, n - 1));
+  if (next !== idx) { idx = next; render(); }
+}
 async function decide(c, keep) {
+  if (leaving) return;  // one press, one decision: presses while a card is leaving are ignored
+  leaving = true;
   const el = document.getElementById("card");
-  if (el) { el.style.transform = `translateX(${keep ? 120 : -120}%) rotate(${keep ? 6 : -6}deg)`; el.style.opacity = "0"; }
-  await api("/api/swipe", { id: c.id, keep });
-  setTimeout(poll, 180);
+  if (el) {
+    const stamp = el.querySelector(".stamp");
+    stamp.textContent = keep ? "Kept" : "Fix"; stamp.classList.add(keep ? "kept" : "fix");
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const side = keep ? 1 : -1;
+    el.classList.add("leaving");
+    if (!still) el.style.transform = `translateX(${side * 6}%) rotate(${side * 1.5}deg)`;
+    setTimeout(() => {
+      el.classList.add("gone");
+      el.style.transform = still ? "" : `translateX(${side * 115}%) rotate(${side * 6}deg)`;
+      el.style.opacity = "0";
+    }, 180);
+  }
+  // Wait for both the swipe to save and the card to finish leaving (180ms read + 280ms travel), then show the next one.
+  await Promise.all([api("/api/swipe", { id: c.id, keep }), new Promise((r) => setTimeout(r, 470))]);
+  leaving = false; last = ""; poll();
 }
 async function nav_(what) {
   if (what === "send") {
@@ -263,11 +338,17 @@ async function nav_(what) {
     return;
   }
   // Set the view first: a reply that lands after the reader clicked a tab must not move them.
-  if (what === "undo") { view = "review"; openId = null; render(); await api("/api/undo", {}); }
+  if (what === "undo") { view = "review"; openId = null; render(); const r = await api("/api/undo", {}); if (r.ok) focusId = r.id; }
   if (what === "reset") { view = "auto"; openId = null; await api("/api/reset?to=drafts", {}); }
   last = ""; poll();
 }
-async function sendFix(text, cards) { if (fixing) return; fixing = true; await api("/api/fix", { ids: cards.map((c) => c.id), instruction: text }); fixing = false; poll(); }
+async function sendFix(text, cards) {
+  if (fixing || (S && S.busy.on)) return;
+  // Stay on the pile while it rewrites (swipes would wait on the agent); when the rewrites land, the deck shows them.
+  fixing = true; view = "fix"; openId = null; awaitingFix = true;
+  await api("/api/fix", { ids: cards.map((c) => c.id), instruction: text });
+  fixing = false; last = ""; poll();
+}
 
 function wire(el, c) {
   document.querySelectorAll("[data-act]").forEach((b) => (b.onclick = () => decide(c, b.dataset.act === "keep")));
@@ -281,7 +362,8 @@ document.addEventListener("keydown", (e) => {
   if (e.target.closest("input")) return;
   if (e.key === "Backspace") { e.preventDefault(); nav_("undo"); return; }
   if (openId || (view !== "auto" && view !== "review")) return; // arrows swipe only on the review deck
-  const c = S && S.cards.find((x) => x.status === "pending");
+  if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); page(e.key === "ArrowDown" ? 1 : -1); return; }
+  const c = S && S.cards.filter((x) => x.status === "pending")[idx];
   if (!c) return;
   if (e.key === "ArrowRight") decide(c, true);
   if (e.key === "ArrowLeft") decide(c, false);
@@ -290,8 +372,9 @@ document.addEventListener("keydown", (e) => {
 let last = "";
 async function poll() {
   S = await api("/api/state");
+  if (awaitingFix && !S.busy.on && S.step === "self_correct" && !S.cards.some((c) => c.status === "fix")) { awaitingFix = false; view = "auto"; }
   const sig = JSON.stringify([S.step, S.busy, S.cards.map((c) => [c.id, c.status, c.version]), S.events_logged, S.style]);
-  if (sig !== last) { last = sig; render(); }
+  if (sig !== last && !leaving) { last = sig; render(); }  // never redraw under a card that is still leaving
 }
 poll(); setInterval(poll, 1200);
 </script>
