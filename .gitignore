@@ -3,3 +3,5 @@ state.json
 server.log
 __pycache__/
 *.pyc
+judge_compare_*.json
+*.log

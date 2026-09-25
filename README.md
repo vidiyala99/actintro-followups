@@ -32,9 +32,9 @@ per draft stays flat.
 ## Plan, act, observe, self-correct
 
 1. **Plan**: pick the most relevant leads from the ranked room.
-2. **Act**: research each lead on the web with **Nimble** (their company's careers page, their talks and work). A small
-   local **Liquid** model (LFM2.5-1.2B) judges every result: is it about this person and this company, or a namesake?
-   Then a model on **AWS Bedrock** writes the follow-up from the facts that survived.
+2. **Act**: research each lead on the web with **Nimble** (their company's careers page, their talks and work). A model
+   on **AWS Bedrock** keeps only the results about this company (not a namesake), then writes the follow-up from the
+   facts that survived.
 3. **Observe**: you swipe. Each swipe is logged.
 4. **Self-correct**: a fix like "Shorter" becomes a general rule on the style card, the rejected drafts are rewritten,
    and every later draft follows the rule without being told again.
@@ -47,18 +47,29 @@ rewrite) is a model call.
 
 - **Tinybird (Rawtree)**: the append-only event log behind the page's history line and the audit trail.
 - **Nimble**: live web data. Reads the event page, each lead's company careers page, and their public work.
-- **Liquid AI (LFM2.5-1.2B-Instruct)**: runs locally through llama.cpp and does the small, frequent judgement calls
-  (keep or drop each web result), constrained to a JSON schema. Free per call, about a second each.
-- **AWS (Bedrock)**: the model that writes, turns fixes into rules and rewrites.
+- **AWS (Bedrock)**: filters the research, writes, turns fixes into rules and rewrites.
+
+### Tested today and left out: Liquid AI
+
+We wired **LFM2.5-1.2B-Instruct** (local, llama.cpp) in as the research filter and then measured it against Bedrock on
+the same 100 Nimble results from the real room (`judge_compare.py`): is this result this company's jobs page?
+
+| | Liquid 1.2B (local) | Bedrock (Kimi K2.5) |
+|---|---|---|
+| Valid JSON | 100/100 | 100/100 |
+| Median time per call | 2.0s | 3.8s |
+| Said "same company" | 1/100 | 68/100 |
+| Agreed on keep/drop | 47/100 | reference |
+
+It called jobs.apple.com "not Apple" and metacareers.com "not Meta". Asking for a reason first made it worse (13/40),
+and its reasons contradicted its answers. Fast and schema-perfect, but not fit for "whose page is this". The code path
+stays (`liquid.py`, set `LIQUID_URL`) so the test can be rerun on a larger model.
 
 ## Run it
 
 ```
 pip install -r requirements.txt
 cp .env.example .env        # add your Rawtree and Nimble keys; AWS credentials as usual
-# optional: Liquid for the research filter (without it, Bedrock does the filtering too)
-llama-server -m LFM2.5-1.2B-Instruct-Q4_K_M.gguf --port 8090 -c 8192
-export LIQUID_URL=http://127.0.0.1:8090
 python server.py            # or: python server.py your_room.json
 ```
 
@@ -68,7 +79,8 @@ Open http://localhost:8765, press **Show me**, then swipe with the arrow keys or
 
 - `agent.py`: plan, research, draft, swipe, fix; the state cards and the exact checks
 - `llm.py`: one structured call to Bedrock
-- `liquid.py`: one structured call to the local Liquid model
+- `liquid.py`: one structured call to a local Liquid model (off unless `LIQUID_URL` is set)
+- `judge_compare.py`: the Liquid vs Bedrock test above
 - `sponsors.py`: Rawtree log and Nimble search/extract clients
 - `server.py`: the API the page polls
 - `index.html`: the page (product on the left, what the agent is doing on the right)
