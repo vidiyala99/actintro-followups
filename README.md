@@ -32,7 +32,7 @@ per draft stays flat.
 ## Plan, act, observe, self-correct
 
 1. **Plan**: pick the most relevant leads from the ranked room.
-2. **Act**: research each lead on the web with **Nimble** (their company's careers page, their talks and work). A model
+2. **Act**: search the web for each lead's company careers pages and open roles with **Nimble**. A model
    on **AWS Bedrock** keeps only the results about this company (not a namesake), then writes the follow-up from the
    facts that survived.
 3. **Observe**: you swipe. Each swipe is logged.
@@ -46,7 +46,10 @@ rewrite) is a model call.
 ## Sponsor tools
 
 - **Tinybird (Rawtree)**: the append-only event log behind the page's history line and the audit trail.
-- **Nimble**: live web data. Reads the event page, each lead's company careers page, and their public work.
+- **Nimble**: live web search. Finds the event's talks and each lead's company careers pages and open roles. The agent
+  works from the search results; it does not yet open each page, so it cannot tell a live posting from one that was
+  taken down, and job boards can outrank the company's own careers page. Next: search the company's own domain and
+  job board first, then open each source (Nimble extract) and keep only postings that are still open.
 - **Black Forest Labs (FLUX 1.1 [pro])**: the faces of the made-up people in the sample room (`faces.py`). The names are
   invented, so no real person's photo can stand in; each face is generated once from the made-up name and role and
   saved in `faces/`, and the page says they are AI-generated.
