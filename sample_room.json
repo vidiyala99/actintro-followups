@@ -5,14 +5,91 @@
     "description": "Postman's developer meetup in San Francisco: live demos and talks on building agents on top of APIs."
   },
   "reader": "Aakash Vidiyala: software engineer, 3 years of data platform work (Snowflake migration, same-day ETL on 5M+ row tables), built agent evals (TrueBind) and is building actintro.com. Looking for full-stack, backend, platform or forward-deployed engineering roles in SF.",
-  "top": 6,
+  "top": 8,
+  "note": "Roles and companies are the real top matches from Actintro's ranking of this event; every name is made up.",
   "leads": [
-    {"id": "l1", "name": "Maya Okafor", "title": "Staff Engineer, API Platform", "company": "Postman", "why": "Works on the API platform that hosted the event; Postman hires platform engineers.", "score": 92},
-    {"id": "l2", "name": "Daniel Kwon", "title": "Engineering Manager", "company": "Supabase", "why": "Manages a backend team at a company that hires remote backend engineers.", "score": 88},
-    {"id": "l3", "name": "Rhea Sharma", "title": "Developer Relations", "company": "Firebase", "why": "Firebase presented agent skills at the event.", "score": 84},
-    {"id": "l4", "name": "Tomas Bravo", "title": "Founding Engineer", "company": "Browserbase", "why": "Founding engineer at an agent infrastructure startup.", "score": 81},
-    {"id": "l5", "name": "Priya Menon", "title": "Senior Software Engineer", "company": "Temporal", "why": "Works on durable execution, close to long-running agent work.", "score": 77},
-    {"id": "l6", "name": "Leo Hartmann", "title": "Product Engineer", "company": "Resend", "why": "Small team shipping developer APIs.", "score": 72},
-    {"id": "l7", "name": "Ana Ruiz", "title": "Student", "company": "SF State", "why": "Peer at the event.", "score": 30}
-  ]
+    {
+      "id": "l1",
+      "name": "Jordan Ellis",
+      "title": "Lead AI Product Design Engineer",
+      "company": "GEICO",
+      "why": "Leads an AI product engineering team that hires engineers.",
+      "score": 95,
+      "website": "geico.com"
+    },
+    {
+      "id": "l2",
+      "name": "Priya Raman",
+      "title": "Head of Operations, Technical Infrastructure",
+      "company": "Google Cloud",
+      "why": "Runs technical infrastructure operations and hires for it.",
+      "score": 78,
+      "website": "cloud.google.com"
+    },
+    {
+      "id": "l3",
+      "name": "Marcus Lee",
+      "title": "AI Developer Advocate",
+      "company": "Nebius",
+      "why": "Developer advocate at an AI cloud that hires engineers.",
+      "score": 67,
+      "website": "nebius.com"
+    },
+    {
+      "id": "l4",
+      "name": "Sofia Alvarez",
+      "title": "President and Chief Data Scientist",
+      "company": "Plum AI",
+      "why": "Runs a small AI company and decides who it hires.",
+      "score": 66,
+      "website": "plumlending.com"
+    },
+    {
+      "id": "l5",
+      "name": "Ethan Brooks",
+      "title": "CEO",
+      "company": "Carmel Labs",
+      "why": "Founder of an early company.",
+      "score": 68,
+      "website": ""
+    },
+    {
+      "id": "l6",
+      "name": "Nina Kapoor",
+      "title": "Senior Talent Engagement Partner",
+      "company": "HP IQ",
+      "why": "Recruits engineers.",
+      "score": 65,
+      "website": "hp.com"
+    },
+    {
+      "id": "l7",
+      "name": "Daniel Cho",
+      "title": "Machine Learning Manager",
+      "company": "Apple",
+      "why": "Manages an ML team.",
+      "score": 55,
+      "website": "apple.com"
+    },
+    {
+      "id": "l8",
+      "name": "Leah Morgan",
+      "title": "Member of Technical Staff",
+      "company": "Augment Code",
+      "why": "Engineer who can refer you inside.",
+      "score": 54,
+      "website": "augmentcode.com"
+    },
+    {
+      "id": "l9",
+      "name": "Arjun Mehta",
+      "title": "Member of Technical Staff",
+      "company": "Oracle",
+      "why": "Engineer who can refer you inside.",
+      "score": 50,
+      "website": "oracle.com"
+    }
+  ],
+  "names_invented": true,
+  "target_roles": "software engineer backend platform"
 }

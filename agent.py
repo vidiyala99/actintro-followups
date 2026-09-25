@@ -22,6 +22,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
+import liquid
 import llm
 from sponsors import Log, Web
 
@@ -66,6 +67,9 @@ class State:
     context_chars: list[int] = field(default_factory=list)
     history_chars: list[int] = field(default_factory=list)
     context_series: list[int] = field(default_factory=list)
+    names_invented: bool = False
+    target_roles: str = "software engineer"
+    max_words: int = 0           # set by the model when a learned rule limits length; 0 means no limit
 
     def save(self) -> None:
         STATE.write_text(json.dumps({**asdict(self)}, indent=1, ensure_ascii=False), encoding="utf-8")
@@ -122,7 +126,11 @@ class Agent:
         if not self.web:
             return lead.get("facts", [])
         hits = []
-        for q in (f"{lead['name']} {lead.get('company', '')}", f"{lead.get('company', '')} careers jobs"):
+        # A room with made-up names (the public demo) searches only the company; a real room also searches the person.
+        queries = [f"{lead.get('company', '')} careers {self.s.target_roles}".strip()]
+        if not self.s.names_invented:
+            queries.insert(0, f"{lead['name']} {lead.get('company', '')}")
+        for q in queries:
             try:
                 hits += [{"title": h.get("title", ""), "url": h.get("url", ""), "text": (h.get("description") or "")[:1200]}
                          for h in self.web.search(q, max_results=3)]
@@ -130,20 +138,27 @@ class Agent:
                 self.note("Nimble", "error", f"search failed for {lead['name']}: {type(exc).__name__}")
         if not hits:
             return []
-        ans, _ = llm.ask(
+        # Liquid (small, local, free) does this frequent judgement; Bedrock is the fallback when Liquid is not running.
+        judge, judge_name = (liquid.ask, "Liquid") if liquid.available() else (llm.ask, "Bedrock")
+        ans, _ = judge(
             "From these web results, keep at most 3 facts that are clearly about THIS person or THIS company (the same "
             "company, not a namesake) and would make a follow-up specific: a talk they gave, something they built or "
-            "wrote, an open role that fits the reader. Drop anything about other companies or general articles. One "
-            "fact per url, and the url exactly as given. Fewer facts is fine; never invent.",
-            f"PERSON: {lead['name']}, {lead.get('title', '')} at {lead.get('company', '')}\nREADER: {self.s.reader}\n\n"
+            "wrote, or an open role matching ROLES WANTED. Drop anything about other companies (check the website) or "
+            "general articles. Write each fact about the company or the page, never about a person it does not name. "
+            "One fact per url, and the url exactly as given. Fewer facts is fine; never invent.",
+            f"PERSON: {lead['name']}, {lead.get('title', '')}\n"
+            f"COMPANY: {lead.get('company', '')} (website: {lead.get('website') or 'unknown'})\n"
+            f"ROLES WANTED: {self.s.target_roles or 'any'}\n\n"
             f"RESULTS:\n{json.dumps(hits, ensure_ascii=False)[:9000]}",
             self.RESEARCH_SCHEMA, max_tokens=700)
-        urls = {h["url"] for h in hits}
+        titles = {h["url"]: h["title"] for h in hits}
         facts, seen = [], set()
-        for f in ans["facts"]:  # provenance: only urls the search returned, each once
-            if f["url"] in urls and f["url"] not in seen:
-                seen.add(f["url"])
-                facts.append(f)
+        for f in ans["facts"]:  # provenance: only urls the search returned, titled as the page titles itself; one per title
+            key = titles.get(f["url"]) or f["url"]
+            if f["url"] in titles and f["url"] not in seen and key not in seen:
+                seen.update({f["url"], key})
+                facts.append({**f, "source_title": titles[f["url"]] or f["url"]})
+        self.note(judge_name, "filter", f"Kept {len(facts)} of {len(hits)} web results for {lead['name']}.")
         for f in facts:
             self.note("Nimble", "fact", f"{lead['name']}: {f['fact']}", url=f["url"])
         return facts
@@ -156,7 +171,8 @@ class Agent:
 
     def _draft(self, lead: dict, extra: str = "") -> tuple[dict, int]:
         system = ("Write one follow-up from the reader to this person, after an event they both attended but did not "
-                  "talk at. Follow every rule on the style card exactly. Use only facts on the lead card and the event "
+                  "talk at. The READER is the sender: everything under READER is the sender's own background and work, "
+                  "never the person's, so never praise the person for it. Follow every rule on the style card exactly. Use only facts on the lead card and the event "
                   "card; never invent. Plain text. No em dashes. No links. Pick the channel: Email when the lead card "
                   "has an email or a hiring angle, else LinkedIn note. `why` is one line on why this person, for the "
                   "reader. End the body with exactly this line and nothing after it, no sign-off: " + CLOSING +
@@ -178,6 +194,9 @@ class Agent:
                 problems.append("it has a link")
             if not ans["body"].rstrip().endswith(CLOSING):
                 problems.append(f"the body must end with exactly: {CLOSING} (nothing after it, no sign-off)")
+            words = len(ans["body"].split())
+            if self.s.max_words and words > self.s.max_words:
+                problems.append(f"the body is {words} words; the style card allows at most {self.s.max_words}")
             if not problems:
                 return ans, len(system) + len(context)
             system += "\n\nRewrite: " + "; ".join(problems) + "."
@@ -214,8 +233,9 @@ class Agent:
 
     # ---- self-correct ----
     RULE_SCHEMA = {
-        "type": "object", "required": ["rule", "style"],
-        "properties": {"rule": {"type": "string"}, "style": {"type": "array", "maxItems": 8, "items": {"type": "string"}}},
+        "type": "object", "required": ["rule", "style", "max_words"],
+        "properties": {"rule": {"type": "string"}, "style": {"type": "array", "maxItems": 8, "items": {"type": "string"}},
+                       "max_words": {"type": "integer", "minimum": 0}},
     }
 
     def fix(self, card_ids: list[str], instruction: str) -> None:
@@ -225,11 +245,13 @@ class Agent:
         ans, _ = llm.ask(
             "The reader rejected these drafts and said how to fix them. Turn that into ONE short, general rule for all "
             "future drafts (not about one person), and return the updated style card: keep the existing rules, merge or "
-            "replace any the new rule contradicts, at most 8 rules, each under 12 words.",
+            "replace any the new rule contradicts, at most 8 rules, each under 12 words. `max_words`: the longest a "
+            "message body may be under the updated card (the number in its length rule, clearly below the rejected "
+            "drafts if the reader asked for shorter), or 0 if the card has no length rule.",
             f"STYLE CARD\n- " + "\n- ".join(self.s.style) + f"\n\nREADER SAID: {instruction}\n\nREJECTED:\n" +
-            "\n---\n".join(f"{c.subject}\n{c.body}" for c in cards),
+            "\n---\n".join(f"({len(c.body.split())} words)\n{c.subject}\n{c.body}" for c in cards),
             self.RULE_SCHEMA, max_tokens=500)
-        self.s.style, self.s.new_rule = ans["style"], ans["rule"]
+        self.s.style, self.s.new_rule, self.s.max_words = ans["style"], ans["rule"], int(ans.get("max_words") or 0)
         self.note("Bedrock", "rule", f"New rule on your style card: {ans['rule']}")
         for c in cards:
             lead = self.lead(c.lead_id)

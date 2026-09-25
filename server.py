@@ -102,6 +102,8 @@ def start():
 
     def go():
         agent.s.event = read_event(room)
+        agent.s.names_invented = bool(room.get("names_invented"))
+        agent.s.target_roles = room.get("target_roles", "software engineer")
         agent.plan(room["leads"], agent.s.event, room["reader"], top=room.get("top", 12))
         agent.act()
     background("Writing follow-ups", go)

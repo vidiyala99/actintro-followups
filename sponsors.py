@@ -22,7 +22,7 @@ HERE = Path(__file__).resolve().parent
 ENV_FILES = [HERE / ".env"]
 
 
-def env(name: str) -> str:
+def env(name: str, default: str | None = None) -> str:
     if os.environ.get(name):
         return os.environ[name]
     for env_file in ENV_FILES:
@@ -30,6 +30,8 @@ def env(name: str) -> str:
             for line in env_file.read_text(encoding="utf-8").splitlines():
                 if line.startswith(name + "="):
                     return line.split("=", 1)[1].strip()
+    if default is not None:
+        return default
     raise SystemExit(f"missing {name}: set it in the environment or in .env")
 
 
