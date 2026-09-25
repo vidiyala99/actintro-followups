@@ -28,6 +28,7 @@ from sponsors import Log, Web
 
 HERE = Path(__file__).resolve().parent
 STATE = HERE / "state.json"
+FRESH = HERE / "state_fresh.json"  # the run right after the drafts were written; reset restores it
 
 CLOSING = "If it's relevant, I'd like to catch up."
 
@@ -70,15 +71,16 @@ class State:
     names_invented: bool = False
     target_roles: str = "software engineer"
     max_words: int = 0           # set by the model when a learned rule limits length; 0 means no limit
+    swiped: list[str] = field(default_factory=list)  # card ids in swipe order, so Undo can put the last one back
 
     def save(self) -> None:
         STATE.write_text(json.dumps({**asdict(self)}, indent=1, ensure_ascii=False), encoding="utf-8")
 
     @classmethod
-    def load(cls) -> "State":
-        if not STATE.exists():
+    def load(cls, path: Path = STATE) -> "State":
+        if not path.exists():
             return cls()
-        raw = json.loads(STATE.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding="utf-8"))
         raw["cards"] = [Card(**c) for c in raw.get("cards", [])]
         return cls(**raw)
 
@@ -89,6 +91,8 @@ class Agent:
         self.log = log
         self.web = web
         self.run = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+        # One background writer keeps Rawtree rows in order without making a swipe wait on the network.
+        self._writer = ThreadPoolExecutor(max_workers=1)
 
     # ---- the log (append-only, never read back by a model) ----
     def note(self, tool: str, kind: str, text: str, **extra) -> None:
@@ -101,10 +105,15 @@ class Agent:
         # One point per logged event on both lines: what the latest draft read, carried forward until the next draft.
         self.s.context_series.append(extra.get("context_chars") or (self.s.context_series[-1] if self.s.context_series else 0))
         if self.log:
-            try:
-                self.log.write([row])
-            except Exception:  # noqa: BLE001 - the demo keeps going if the log is down; the feed still shows it
-                pass
+            self._writer.submit(self._write, row)
+
+    def _write(self, row: dict) -> None:
+        if not self.log:
+            return
+        try:
+            self.log.write([row])
+        except Exception:  # noqa: BLE001 - the demo keeps going if the log is down; the feed still shows it
+            pass
 
     # ---- plan ----
     def plan(self, leads: list[dict], event: dict, reader: str, top: int = 12) -> None:
@@ -221,15 +230,32 @@ class Agent:
             self.s.cards.append(card)
             self.note("Bedrock", "draft", f"Wrote the {card.channel.lower()} to {lead['name']}.", context_chars=size)
             self.s.save()
+        FRESH.write_text(STATE.read_text(encoding="utf-8"), encoding="utf-8")
 
     # ---- observe ----
     def swipe(self, card_id: str, keep: bool) -> None:
         self.s.step = "observe"
         card = next(c for c in self.s.cards if c.id == card_id)
+        if card.status != "pending":  # a double tap or a repeated key: already decided, log nothing
+            return
         card.status = "kept" if keep else "fix"
+        self.s.swiped.append(card_id)
         lead = self.lead(card.lead_id)
         self.note("Rawtree", "swipe", f"{'Kept' if keep else 'Sent back to fix'}: {lead['name']}.", card=card_id)
         self.s.save()
+
+    def undo(self) -> bool:
+        """Put the most recently swiped card that is still decided back on top of the deck."""
+        while self.s.swiped:
+            last_id = self.s.swiped.pop()
+            card = next((c for c in self.s.cards if c.id == last_id), None)
+            if card and card.status != "pending":  # a card a fix already rewrote is pending again: skip it
+                card.status = "pending"
+                self.s.step = "observe"
+                self.note("Rawtree", "undo", f"Undid: {self.lead(card.lead_id)['name']} is back on top.", card=card.id)
+                self.s.save()
+                return True
+        return False
 
     # ---- self-correct ----
     RULE_SCHEMA = {

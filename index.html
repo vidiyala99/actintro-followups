@@ -80,6 +80,24 @@ kbd { margin-left: 0.5rem; padding: 0 0.35rem; border: 1px solid currentColor; b
 .style small { display: block; margin-top: 0.45rem; font-size: 0.8rem; color: var(--card-muted); }
 .legend { display: flex; gap: 1rem; margin-top: 0.4rem; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .legend i { display: inline-block; width: 0.8rem; height: 0.2rem; margin-right: 0.35rem; vertical-align: 0.2em; }
+.nav { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.1rem; }
+.tabs { display: flex; gap: 0.25rem; padding: 0.25rem; border: 1px solid var(--rule); border-radius: 0.6rem; background: var(--raised); }
+.tabs button { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.25rem; padding: 0 0.8rem; border-radius: 0.4rem; font-weight: 700; font-size: 0.92rem; color: var(--muted); transition: background-color 160ms ease, color 160ms ease; }
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--ground); }
+.tabs .n { font-variant-numeric: tabular-nums; font-weight: 400; opacity: 0.85; }
+.navlink { min-height: 2.25rem; padding: 0 0.6rem; border-radius: 0.4rem; font-size: 0.92rem; color: var(--muted); transition: color 160ms ease; }
+.navlink:hover { color: var(--ink); }
+.navlink kbd { opacity: 0.6; }
+.nav .grow { flex: 1; }
+.tabs button:focus-visible, .navlink:focus-visible, .mini:focus-visible, .back:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+button.mini { width: 100%; text-align: left; color: inherit; transition: border-color 160ms ease; }
+button.mini:hover { border-color: var(--muted); }
+.mini .st { justify-self: end; font-size: 0.8rem; color: var(--muted); }
+.mini.has-st { grid-template-columns: 2.5rem 1fr auto; }
+.back { font-size: 0.92rem; color: var(--muted); }
+.back:hover { color: var(--ink); }
+.readonly { margin-top: 0.7rem; font-size: 0.85rem; color: var(--muted); text-align: center; }
 @media (prefers-reduced-motion: reduce) { .card { transition: opacity 150ms ease; } }
 </style>
 </head>
@@ -93,7 +111,7 @@ kbd { margin-left: 0.5rem; padding: 0 0.35rem; border: 1px solid currentColor; b
 const $ = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const initials = (n) => (n || "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-let S = null, fixing = false;
+let S = null, fixing = false, view = "auto", openId = null;
 
 async function api(path, body) {
   const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
@@ -159,24 +177,47 @@ function render() {
   }
   const pending = s.cards.filter((c) => c.status === "pending");
   const fix = s.cards.filter((c) => c.status === "fix");
-  const kept = s.cards.filter((c) => c.status === "kept").length;
+  const keptCards = s.cards.filter((c) => c.status === "kept"), kept = keptCards.length;
+  // "auto" follows the flow (review, then fix, then kept); a tab pins a pile until the reader picks another.
+  const v = view !== "auto" ? view : pending.length ? "review" : fix.length ? "fix" : "kept";
+  const tab = (k, label, n) => `<button role="tab" aria-selected="${v === k}" data-view="${k}">${label}<span class="n">${n}</span></button>`;
+  const nav = `<nav class="nav" aria-label="Your follow-ups">
+      <div class="tabs" role="tablist">${tab("review", "To review", pending.length)}${tab("fix", "To fix", fix.length)}${tab("kept", "Kept", kept)}</div>
+      <span class="grow"></span>
+      <button class="navlink" data-nav="undo" title="Put the last card back">Undo<kbd>Backspace</kbd></button>
+      <button class="navlink" data-nav="reset" title="Back to the first drafts, style card cleared">Start over</button></nav>`;
+  const row = (c, st) => `<button class="mini${st ? " has-st" : ""}" data-open="${c.id}"><span class="av">${esc(initials(c.lead.name))}</span><p><b>${esc(c.lead.name)}</b><small>${esc(c.lead.title)}, ${esc(c.lead.company)} · ${esc(c.channel)}</small></p>${st ? `<span class="st">${esc(st)}</span>` : ""}</button>`;
   let main;
-  if (pending.length) {
+  const open = openId && s.cards.find((c) => c.id === openId);
+  if (open) {
+    const back = v === "kept" ? "Kept" : v === "fix" ? "To fix" : "To review";
+    main = `<div class="head"><button class="back" data-open="">&larr; Back to ${back}</button></div>${cardHtml(open).split('<div class="dock">')[0]}<p class="readonly">${open.status === "kept" ? "Kept. It is in your Inbox, ready to send." : "Sent back to fix."}</p>`;
+  } else if (v === "review" && pending.length) {
     main = `<div class="head"><h1>${s.new_rule ? "Rewritten with your rule" : "Follow-ups ready"}</h1>
       <p>${esc(s.event.title || "")} · ${kept + fix.length + 1} of ${s.cards.length} for your most relevant leads</p></div>${cardHtml(pending[0])}`;
-  } else if (fix.length) {
-    main = `<div class="head"><h1>${fix.length} to fix</h1><p>You sent these back. Fix them all at once.</p></div>
-      <div class="pile">${fix.map((c) => `<div class="mini"><span class="av">${esc(initials(c.lead.name))}</span><p><b>${esc(c.lead.name)}</b><small>${esc(c.lead.title)}, ${esc(c.lead.company)} · ${esc(c.channel)}</small></p></div>`).join("")}</div>
+  } else if (v === "fix" && fix.length) {
+    main = `<div class="head"><h1>${fix.length} to fix</h1><p>You sent these back. Fix them all at once, or open one to reread it.</p></div>
+      <div class="pile">${fix.map((c) => row(c)).join("")}</div>
       <p class="qlabel">Fix all ${fix.length} in one tap</p>
       <div class="quick">${["Shorter", "Warmer", "No job ask", "Mention their talk"].map((q) => `<button data-q="${q}">${q}</button>`).join("")}</div>
       <form class="field" id="fixform"><input id="fixin" aria-label="Tell Actintro how to fix these" placeholder="Or say how, e.g. open with the Firebase demo"><button class="send" aria-label="Send">&uarr;</button></form>`;
+  } else if (v === "kept" && kept) {
+    main = `<div class="head"><h1>${pending.length || fix.length ? `${kept} kept so far` : `All done: ${kept} kept`}</h1><p>Kept drafts are in your Inbox, ready to send. Open one to read it.</p></div>
+      <div class="pile">${keptCards.map((c) => row(c, c.version > 1 ? "Rewritten" : "")).join("")}</div>`;
   } else {
-    main = `<div class="head"><h1>${s.busy.on ? "Writing follow-ups" : `All done: ${kept} kept`}</h1><p>${s.busy.on ? "" : "Kept drafts are in your Inbox, ready to send."}</p></div>`;
+    const empty = { review: "Nothing left to review", fix: "Nothing to fix", kept: "Nothing kept yet" }[v];
+    const hint = { review: `You've been through all ${s.cards.length}.${fix.length ? ` Fix the ${fix.length} you sent back,` : ""}${kept ? ` or read the ${kept} you kept.` : ""}`,
+                   fix: "Everything you sent back has been rewritten.", kept: "Swipe right on a draft to keep it." }[v];
+    main = `<div class="head"><h1>${s.busy.on ? "Writing follow-ups" : empty}</h1>${s.busy.on ? "" : `<p>${esc(hint)}</p>`}</div>`;
   }
+  main = (s.cards.length ? nav : "") + main;
   if (s.busy.on) main += `<p class="busy">${esc(s.busy.what)}… ${s.cards.length} of ${s.leads_total || "?"} written</p>`;
   app.innerHTML = `<div class="split"><main>${main}</main>${panel(s)}</div>`;
   const card = document.getElementById("card");
-  if (card) wire(card, pending[0]);
+  if (card && !open) wire(card, pending[0]);
+  document.querySelectorAll("[data-view]").forEach((b) => (b.onclick = () => { view = b.dataset.view; openId = null; render(); }));
+  document.querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => { openId = b.dataset.open || null; render(); }));
+  document.querySelectorAll("[data-nav]").forEach((b) => (b.onclick = () => nav_(b.dataset.nav)));
   document.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => sendFix(b.dataset.q, fix)));
   const form = document.getElementById("fixform");
   if (form) form.onsubmit = (e) => { e.preventDefault(); const v = document.getElementById("fixin").value.trim(); if (v) sendFix(v, fix); };
@@ -187,6 +228,12 @@ async function decide(c, keep) {
   if (el) { el.style.transform = `translateX(${keep ? 120 : -120}%) rotate(${keep ? 6 : -6}deg)`; el.style.opacity = "0"; }
   await api("/api/swipe", { id: c.id, keep });
   setTimeout(poll, 180);
+}
+async function nav_(what) {
+  // Set the view first: a reply that lands after the reader clicked a tab must not move them.
+  if (what === "undo") { view = "review"; openId = null; render(); await api("/api/undo", {}); }
+  if (what === "reset") { view = "auto"; openId = null; await api("/api/reset?to=drafts", {}); }
+  last = ""; poll();
 }
 async function sendFix(text, cards) { if (fixing) return; fixing = true; await api("/api/fix", { ids: cards.map((c) => c.id), instruction: text }); fixing = false; poll(); }
 
@@ -200,6 +247,8 @@ function wire(el, c) {
 }
 document.addEventListener("keydown", (e) => {
   if (e.target.closest("input")) return;
+  if (e.key === "Backspace") { e.preventDefault(); nav_("undo"); return; }
+  if (openId || (view !== "auto" && view !== "review")) return; // arrows swipe only on the review deck
   const c = S && S.cards.find((x) => x.status === "pending");
   if (!c) return;
   if (e.key === "ArrowRight") decide(c, true);

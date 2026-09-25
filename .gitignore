@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 judge_compare_*.json
 *.log
+state_fresh.json

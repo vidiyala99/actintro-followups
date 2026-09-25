@@ -19,7 +19,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 import llm
-from agent import STATE, Agent, State
+from agent import FRESH, STATE, Agent, State
 from sponsors import Log, Web
 
 HERE = Path(__file__).resolve().parent
@@ -108,6 +108,32 @@ def start():
         agent.act()
     background("Writing follow-ups", go)
     return {"ok": True}
+
+
+@app.post("/api/reset")
+def reset(to: str = "drafts"):
+    """drafts: back to the first drafts of the last run, no research re-run. intro: back to the start screen."""
+    if busy["on"]:
+        return {"ok": False, "reason": "busy"}
+    with lock:
+        if to == "intro":
+            agent.s = State()
+            STATE.unlink(missing_ok=True)
+        elif FRESH.exists():
+            agent.s = State.load(FRESH)
+            agent.note("Actintro", "reset", "Started over from the first drafts.")
+            agent.s.save()
+        else:
+            return {"ok": False, "reason": "no finished run to reset to"}
+    return {"ok": True, "to": to}
+
+
+@app.post("/api/undo")
+def undo():
+    if busy["on"]:
+        return {"ok": False, "reason": "busy"}
+    with lock:
+        return {"ok": agent.undo()}
 
 
 @app.post("/api/swipe")
